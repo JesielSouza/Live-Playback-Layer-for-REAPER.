@@ -1,0 +1,53 @@
+# Live Playback Layer for REAPER
+
+## O que é o projeto
+Este projeto é uma camada operacional construída sobre o REAPER para transformá-lo em uma plataforma de reprodução de músicas ao vivo. É focado no uso em igrejas, bandas, cultos, shows e apresentações que utilizam stems, click, guide, cues, seções, setlists e automações MIDI de forma estável e previsível.
+
+## O que ele NÃO é
+* **NÃO** é uma nova DAW (Digital Audio Workstation).
+* **NÃO** é um clone completo do Playback da MultiTracks no MVP.
+* **NÃO** possui um backend na nuvem, banco de dados ou integração cloud.
+* **NÃO** possui login, marketplace ou app mobile.
+
+## Escopo do MVP
+O MVP (Minimum Viable Product) foca em uma solução estritamente local e offline, operando de maneira segura e robusta. O sistema é baseado no REAPER e utilizará scripts e metadados locais para gerenciar e executar as apresentações.
+
+## Stack Técnica
+* **Motor Base:** REAPER
+* **Linguagem de Script:** ReaScript em Lua
+* **Interface (UI):** ReaImGui
+* **Metadados:** Regions e Markers nativos do REAPER
+* **Ações:** Actions nativas do REAPER (SWS Extension usada de forma muito pontual e apenas quando necessário)
+* **Persistência e Configuração:** Arquivos JSON locais para setlists e configurações
+* **Log:** JSONL local para auditoria e logs
+
+## Dependências Esperadas
+* REAPER (versão recomendada mais recente)
+* ReaImGui
+* SWS Extension (apenas o estritamente necessário)
+
+## Instalação Futura
+No futuro, a instalação se dará copiando os scripts para a pasta de `Scripts` do REAPER e importando a action principal que chamará o script `main.lua`, montando a UI sobre a instância aberta do projeto ou configurando ações de atalho.
+
+## Estado Atual
+O repositório está no estágio de **Bootstrap Inicial**, com a criação da estrutura de arquivos base, os stubs para os scripts em Lua e a criação da documentação principal (Arquitetura, Especificações, Estado, etc.). Nenhuma implementação funcional está em vigor neste momento.
+
+## Guardrails
+* **Extensão C++ é proibida** nesta fase do projeto.
+* Nenhuma implementação ou dependência de Servidor.
+* Sem interface Frontend Web.
+* Sem gerenciador de pacotes externo sem estrita necessidade.
+* Nenhuma dependência externa complexa.
+* Nenhuma integração Cloud ou de Banco de Dados.
+* Sem features de Login ou Marketplace.
+* Sem App Mobile.
+* Sem suporte a roteamento avançado MIDI nesta etapa inicial.
+
+## Próximos Passos (Planejamento)
+1. **Repository Bootstrap & Docs Pack** (Esta etapa)
+2. Definição fina do schema de regions e marcadores
+3. Implementação do motor de parse de regions e leitura
+4. Implementação da engine de State (State Machine) e Transport Base
+5. Criação da UI de Palco (ReaImGui)
+6. Implementação do carregamento e transição de projetos (Setlists)
+7. Finalização do MVP (Logs, Safe Mode, testes integrados)

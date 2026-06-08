@@ -1,0 +1,20 @@
+{
+  "version": "1.0",
+  "name": "Culto de Domingo - Manhã",
+  "songs": [
+    {
+      "title": "Música Exemplo 1 - Abertura",
+      "project_path": "../songs/example-song-01.RPP",
+      "key": "G",
+      "bpm": 120,
+      "notes": "Iniciar com vídeo."
+    },
+    {
+      "title": "Música Exemplo 2 - Adoração",
+      "project_path": "../songs/example-song-02.RPP",
+      "key": "C",
+      "bpm": 74,
+      "notes": "Transição suave após a oração."
+    }
+  ]
+}
