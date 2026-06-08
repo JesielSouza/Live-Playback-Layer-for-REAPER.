@@ -26,6 +26,12 @@ O MVP (Minimum Viable Product) foca em uma solução estritamente local e offlin
 * ReaImGui
 * SWS Extension (apenas o estritamente necessário)
 
+## Testes Locais
+Para rodar os testes da lógica do projeto localmente (sem a necessidade de abrir o REAPER), certifique-se de ter o `lua5.3` instalado e rode:
+```bash
+lua tests/run_tests.lua
+```
+
 ## Instalação Futura
 No futuro, a instalação se dará copiando os scripts para a pasta de `Scripts` do REAPER e importando a action principal que chamará o script `main.lua`, montando a UI sobre a instância aberta do projeto ou configurando ações de atalho.
 

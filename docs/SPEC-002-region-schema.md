@@ -1,28 +1,36 @@
 # SPEC-002 — Schema de Metadados nas Regions
 
 ## Objetivo
-Padronizar como metadados (como tipo de seção, energia) são embutidos no nome das Regions nativas do REAPER.
+Padronizar como metadados (como tipo de seção, propriedades de loop e pulos) são embutidos no nome das Regions nativas do REAPER.
 
 ## Requisitos
-* O nome da Region deve conter o nome da seção.
-* (Opcional no MVP) Tags em colchetes ou chaves para metadados (ex: `[Chorus]`, `[V1]`).
+* O nome da Region deve usar o formato `SECTION_NAME|key=value|key=value`.
+* O primeiro token (antes do primeiro `|`) é o nome da seção e é obrigatório.
+* O parser deve ignorar espaços no início e fim.
 
 ## Entradas
-* String do nome da Region.
+* String do nome da Region (ex: `VERSE_1|loop=0|next=CHORUS_1`).
 
 ## Saídas
-* Objeto Lua com `{ name, type, start_pos, end_pos }`.
+* Objeto Lua com `{ valid, id, name, meta, warnings }`.
 
 ## Regras
-* Nomes vazios de Region geram uma seção com nome "Untitled_X".
-* Regions devem ter um start e end válidos.
+* Nomes vazios de Region a tornam inválida.
+* `loop` aceita "0", "1", "inf" (default: "0").
+* `jump_quant` aceita "immediate", "bar", "section_end" (default: "bar").
+* `allow_prev` aceita "0", "1" (default: "1").
+* Valores não permitidos para os campos acima geram warning e revertem para o valor default.
+* Campos desconhecidos geram warning e são ignorados.
+* Tokens subsequentes ao nome que não tenham `=` geram warning e são ignorados.
 
 ## Riscos
-* Caracteres especiais que quebrem o parser de texto Lua.
+* Caracteres especiais (ex. `|` extra ou no nome da seção) podem gerar quebras no parser simples.
 
 ## Critérios de Aceite
-* O Parser extrai corretamente strings simples.
+* O parser retorna a tabela estruturada com os defaults corretos, não sofre crash e lista os `warnings` apropriadamente.
 
 ## Testes Mínimos
-* Parse de `"Intro"`.
-* Parse de `"[Chorus] Chorus 1"`.
+* Parse de `"INTRO"`.
+* Parse de campos inválidos testando fallback para defaults.
+* Parse de campos desconhecidos.
+* Nomes vazios ou começando com `|`.

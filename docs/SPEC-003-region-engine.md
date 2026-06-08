@@ -1,28 +1,30 @@
 # SPEC-003 — Motor de Leitura de Regions
 
 ## Objetivo
-Ler e mapear todas as regions de um `.RPP` para a memória (State Engine) de maneira eficiente e segura.
+Ler e mapear todas as regions de um `.RPP` para a memória (State Engine) de maneira eficiente e segura, separando as seções válidas das inválidas.
 
 ## Requisitos
-* Deve varrer o projeto atual aberto.
-* Deve montar um array sequencial de sections em ordem de timeline.
+* Deve processar uma lista de regions brutas obtidas do REAPER e repassá-las ao `regions.parse_region_name`.
+* Deve montar arrays separados para `sections` (válidas), `invalid` e `warnings`.
 
 ## Entradas
-* `reaper.EnumProjectMarkers`.
+* Array bruto simulando retornos do `reaper.EnumProjectMarkers` (`{ name, start_pos, end_pos, index }`).
 
 ## Saídas
-* Tabela Lua ordenada com dados de todas as regions (`ID`, `start`, `end`, `name`).
+* Tabela Lua `{ sections = {}, invalid = {}, warnings = {} }`. `sections` ordenada por `start_pos`.
 
 ## Regras
-* Se houver Regions sobrepostas, reportar erro ou assumir a que inicia primeiro.
+* Regions válidas devem conter a metadata normalizada, copiando também `start_pos`, `end_pos` e `index` originais.
+* Regions com nome vazio caem no array `invalid` e geram warning.
 
 ## Riscos
-* API nativa retornar IDs dessincronizados se o usuário editou recentemente durante a execução.
+* Ordenação instável se `start_pos` não estiver presente ou for idêntico.
 
 ## Critérios de Aceite
-* Ler 50 regions em menos de 10ms.
-* Validar que todas estão ordenadas no tempo cronológico.
+* Validar que as seções válidas estão ordenadas no tempo cronológico em `sections`.
+* Separar corretamente as problemáticas em `invalid`.
 
 ## Testes Mínimos
-* Varrer projeto vazio (retorna array vazio).
-* Varrer projeto com 5 regions e checar ordem cronológica.
+* Varrer array vazio (retorna tabelas vazias).
+* Varrer array misto de válidas e inválidas.
+* Varrer array e checar se `sections` foi ordenado corretamente por `start_pos`.
