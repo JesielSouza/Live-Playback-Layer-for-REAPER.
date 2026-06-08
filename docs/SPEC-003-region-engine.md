@@ -8,10 +8,13 @@ Ler e mapear todas as regions de um `.RPP` para a memória (State Engine) de man
 * Deve montar arrays separados para `sections` (válidas), `invalid` e `warnings`.
 
 ## Entradas
-* Array bruto simulando retornos do `reaper.EnumProjectMarkers` (`{ name, start_pos, end_pos, index }`).
+* Tabela de Regions brutas fornecidas pelo adapter em `project.lua`, que consome os dados do `reaper.EnumProjectMarkers`. Formato `{ name, start_pos, end_pos, index }`.
 
 ## Saídas
 * Tabela Lua `{ sections = {}, invalid = {}, warnings = {} }`. `sections` ordenada por `start_pos`.
+
+## Testabilidade Offline
+* A integração com o REAPER na coleta real das Regions (API calls via `project.lua`) possui mock das funções em nível global `_G.reaper` para garantir a testabilidade fora da DAW.
 
 ## Regras
 * Regions válidas devem conter a metadata normalizada, copiando também `start_pos`, `end_pos` e `index` originais.

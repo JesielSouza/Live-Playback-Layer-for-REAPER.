@@ -5,15 +5,15 @@ A arquitetura do **Live Playback Layer for REAPER** é dividida em camadas, de m
 ## Camadas
 
 ### 1. REAPER Project Layer
-* **Responsabilidade:** Armazenamento das tracks de áudio, stems, click, guide, e o tempo da música. Serve como o motor de áudio.
-* **Entradas:** Arquivos `.RPP` configurados.
-* **Saídas:** Áudio roteado para as saídas físicas, eventos MIDI nativos.
+* **Responsabilidade:** Armazenamento das tracks de áudio, stems, click, guide, e o tempo da música. Serve como o motor de áudio. O acesso lógico a esta camada é fornecido via um Adapter (em `scripts/project.lua`) garantindo uma extração limpa e testável de dados das APIs do REAPER ou simulações.
+* **Entradas:** Arquivos `.RPP` configurados (via REAPER aberto) ou mocks nas automações de teste.
+* **Saídas:** Áudio roteado para as saídas físicas, eventos MIDI nativos, lista de regions exposta pelo Adapter.
 * **Riscos:** Configuração incorreta do projeto por parte do usuário (arquivos faltantes, roteamento errado).
 * **Critérios de Aceite:** O projeto deve abrir sem erros e todas as mídias devem estar online.
 
 ### 2. Metadata Layer
-* **Responsabilidade:** Fornecer semântica para os blocos de tempo usando Regions e Markers do REAPER (nome das seções, metadados em JSON ou texto padronizado).
-* **Entradas:** Regions e Markers lidos através da API do REAPER.
+* **Responsabilidade:** Fornecer semântica para os blocos de tempo usando Regions e Markers do REAPER (nome das seções, metadados em texto padronizado).
+* **Entradas:** Strings fornecidas pelo Adapter do projeto.
 * **Saídas:** Objetos de dados estruturados para a Lua State Engine.
 * **Riscos:** Padrões não correspondentes, Regions que se sobrepõem.
 * **Critérios de Aceite:** Regions parseadas de forma correta sem falhar silenciosamente se houver formato inválido.

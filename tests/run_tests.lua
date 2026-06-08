@@ -10,3 +10,5 @@ setup_path()
 
 -- Run tests
 require("tests.test_regions")
+print("--------------------------------------------------")
+require("tests.test_project")
