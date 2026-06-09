@@ -23,4 +23,4 @@ Estabelecer o checklist final para garantir que o MVP cumpre o propósito de ser
 * Checklist manual passando sem problemas.
 
 ## Testes Mínimos
-* Execução sequencial da simulação de 30 minutos sem travamentos de UI.
+* Execução sequencial da simulação de 30 minutos sem travamentos da futura UI.

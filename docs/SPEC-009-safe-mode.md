@@ -4,8 +4,8 @@
 Impedir o operador de realizar ações que destruam a performance enquanto ao vivo.
 
 ## Requisitos
-* Enquanto `PLAYING`, fechar ou carregar novo projeto é bloqueado (via UI).
-* Muta clique duplo acidental nas actions.
+* Enquanto `PLAYING`, fechar ou carregar novo projeto é bloqueado (via UI futura).
+* Evita duplo clique acidental nas actions (debounce).
 
 ## Entradas
 * Estado atual.
@@ -21,7 +21,7 @@ Impedir o operador de realizar ações que destruam a performance enquanto ao vi
 * Bloquear falsamente ações necessárias para recuperar erro.
 
 ## Critérios de Aceite
-* O botão "Load Setlist" ou "Next Song" fica desabilitado cinza se `PLAYING` for verdadeiro.
+* No futuro, o botão "Load Setlist" ou "Next Song" da UI ficará desabilitado (cinza) se `PLAYING` for verdadeiro.
 
 ## Testes Mínimos
 * Iniciar transporte, tentar invocar Load Song via API (deve ser rejeitado com log).
