@@ -46,6 +46,14 @@ O projeto superou o estágio de Bootstrap Inicial. Já implementa:
 * Logger Core JSONL para gravação isolada de logs sem dependências (`scripts/logger.lua` e utilitários).
 * Logger Integration Hooks embutidos nas camadas de Bootstrap e State para registro de eventos (transições e validações) em memória.
 * Console/Debug Runner (`scripts/debug_runner.lua`), preparando o terreno para o REAPER Smoke Test.
+* REAPER Smoke Test Entrypoint (`scripts/reaper_smoke_test.lua`), validando read-only a injeção do sistema diretamente dentro do ambiente da DAW.
+
+## Testando o Smoke Test no REAPER
+1. Abra um projeto vazio no REAPER.
+2. Insira algumas Regions simples e válidas no timeline como: `INTRO|loop=0|next=VERSE_1`, `VERSE_1|loop=0|next=CHORUS_1`, `CHORUS_1|loop=1|next=ENDING` e `ENDING|loop=0`.
+3. Carregue o script `scripts/reaper_smoke_test.lua` através do painel de *Actions*.
+4. Edite a última linha ou adicione um wrapper que invoque `SmokeTest.safe_main()` (atualmente o módulo só é exportado para uso limpo por testes).
+5. O console exibirá o relatório validado com zero ações que alterem a reprodução do projeto.
 
 ## Guardrails
 * **Extensão C++ é proibida** nesta fase do projeto.
