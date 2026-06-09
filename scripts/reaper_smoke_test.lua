@@ -121,6 +121,8 @@ function SmokeTest.safe_main()
     end
 end
 
--- If executed directly within REAPER, the user can append `SmokeTest.safe_main()`
--- or we can do it via a wrapper. For now, it returns the module to keep tests pure.
+if _G and _G.reaper then
+    SmokeTest.safe_main()
+end
+
 return SmokeTest
