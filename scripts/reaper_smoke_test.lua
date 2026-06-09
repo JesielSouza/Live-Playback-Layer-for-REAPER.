@@ -5,6 +5,43 @@
     metadados do projeto ativo (read-only) e cospe no console do REAPER.
 --]]
 
+local function configure_package_path()
+    local source = debug and debug.getinfo and debug.getinfo(1, "S").source or nil
+    if not source then
+        return
+    end
+
+    local script_path = source:match("^@(.+)$")
+    if not script_path then
+        return
+    end
+
+    local script_dir = script_path:match("^(.*[\\/])")
+    if not script_dir then
+        return
+    end
+
+    local project_root = script_dir:gsub("[\\/]scripts[\\/]?$", "")
+    if not project_root or project_root == script_dir then
+        return
+    end
+
+    local patterns = {
+        project_root .. "\\?.lua",
+        project_root .. "\\?\\init.lua",
+        project_root .. "/?.lua",
+        project_root .. "/?/init.lua",
+    }
+
+    for _, pattern in ipairs(patterns) do
+        if not package.path:find(pattern, 1, true) then
+            package.path = package.path .. ";" .. pattern
+        end
+    end
+end
+
+configure_package_path()
+
 local bootstrap = require("scripts.bootstrap")
 local logger = require("scripts.logger")
 local state = require("scripts.state")
