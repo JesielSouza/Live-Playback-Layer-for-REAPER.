@@ -1,5 +1,19 @@
 # Checklist de Teste Manual do MVP
 
+## Smoke Test Inicial (REAPER nativo)
+[ ] Criar um projeto vazio no REAPER.
+[ ] Inserir os marcadores/regions de teste. Exemplo:
+    - `INTRO|loop=0|next=VERSE_1`
+    - `VERSE_1|loop=0|next=CHORUS_1`
+    - `CHORUS_1|loop=1|next=ENDING`
+    - `ENDING|loop=0`
+[ ] Executar `scripts/reaper_smoke_test.lua` através de uma chamada à `SmokeTest.safe_main()` invocada por Action do REAPER.
+[ ] Validar que o ReaScript console aparece sem crashes e com as 4 regiões processadas (Validation Ok: true).
+[ ] Confirmar que nenhum transporte (play/stop/loop) foi acionado na DAW.
+[ ] Confirmar visualmente que o projeto (Tracks, Regions) não foi adulterado/modificado pelo script.
+
+## Testes de Fim-a-Fim
+
 Antes de considerar o MVP pronto para uso em palco, os seguintes cenários devem ser testados manualmente no REAPER. Todos os itens devem passar.
 
 - [ ] **Música com 3 seções:** Carregar um `.RPP` que possua 3 regions sequenciais. A UI deve exibir as seções e o Play deve passar por elas corretamente.

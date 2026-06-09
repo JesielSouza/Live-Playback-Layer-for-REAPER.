@@ -79,3 +79,8 @@ A arquitetura do **Live Playback Layer for REAPER** é dividida em camadas, de m
 * **Entradas:** `project_scan_override` (com cenários *ready*, *warning* ou *blocked*).
 * **Saídas:** Relatório text-based de validação, contagem de seções, state final e contagem de eventos de log gerados.
 * **Nota Atual:** É puramente offline; ainda não chama APIs do REAPER diretamente nem implementa UI/Transporte.
+
+### 12. REAPER Smoke Test Entrypoint
+* **Responsabilidade:** Prover o primeiro script a ser carregado **dentro do ambiente REAPER**.
+* **Fluxo:** Executa o Bootstrap Pipeline invocando o Adapter real sobre o projeto aberto no momento e retorna um log analítico usando a API do console do REAPER (`ShowConsoleMsg`).
+* **Regras de Segurança:** É completamente **read-only**, não interage com ações destrutivas ou transporte real, sendo apenas uma demonstração do arcabouço FSM base para o REAPER.
