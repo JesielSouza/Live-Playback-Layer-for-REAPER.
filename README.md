@@ -45,6 +45,7 @@ O projeto superou o estágio de Bootstrap Inicial. Já implementa:
 * O Bootstrap Integration Pipeline que integra as camadas Base de forma testável (`scripts/bootstrap.lua`).
 * Logger Core JSONL para gravação isolada de logs sem dependências (`scripts/logger.lua` e utilitários).
 * Logger Integration Hooks embutidos nas camadas de Bootstrap e State para registro de eventos (transições e validações) em memória.
+* Console/Debug Runner (`scripts/debug_runner.lua`), preparando o terreno para o REAPER Smoke Test.
 
 ## Guardrails
 * **Extensão C++ é proibida** nesta fase do projeto.

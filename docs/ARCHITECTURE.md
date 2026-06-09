@@ -73,3 +73,9 @@ A arquitetura do **Live Playback Layer for REAPER** é dividida em camadas, de m
 * **Fluxo:** Extrai os dados lógicos de `Project.scan_current_project()`, passa para `Validator.validate_project()` e aplica o resultado na Lua State Engine.
 * **Regras de Transição:** Se a validação for `ready` ou `warning`, as seções são injetadas no State que transita para `SONG_LOADED`. Se for `blocked`, o State transita para `ERROR`.
 * **Nota:** Nesta etapa arquitetural, **ainda não há UI** e **ainda não há transporte real**.
+
+### 11. Console/Debug Runner
+* **Responsabilidade:** Testar as lógicas do Bootstrap Pipeline (simulando payloads) de modo puro e gerar relatórios textuais. Prepara o terreno para o REAPER Smoke Test.
+* **Entradas:** `project_scan_override` (com cenários *ready*, *warning* ou *blocked*).
+* **Saídas:** Relatório text-based de validação, contagem de seções, state final e contagem de eventos de log gerados.
+* **Nota Atual:** É puramente offline; ainda não chama APIs do REAPER diretamente nem implementa UI/Transporte.
