@@ -45,6 +45,7 @@ configure_package_path()
 local bootstrap = require("scripts.bootstrap")
 local logger = require("scripts.logger")
 local navigation = require("scripts.navigation")
+local position = require("scripts.position")
 local state = require("scripts.state")
 
 local SmokeTest = {}
@@ -56,6 +57,23 @@ function SmokeTest.run()
     local sections_map = navigation.format_sections_map(sections)
     local navigation_plan = navigation.plan_initial_navigation(sections)
     local navigation_report = navigation.format_navigation_plan(navigation_plan)
+    local position_result = position.get_reaper_position()
+    local position_snapshot = nil
+    if position_result.ok then
+        position_snapshot = position.build_position_snapshot(sections, position_result.position)
+    else
+        position_snapshot = {
+            ok = false,
+            position = position_result.position,
+            current_section = nil,
+            previous_section = nil,
+            next_section = nil,
+            navigation_plan = nil,
+            warnings = position_result.warnings or {},
+            errors = position_result.errors or {}
+        }
+    end
+    local position_report = position.format_position_snapshot(position_snapshot)
     local events = logger.get_events()
 
     local events_copy = {}
@@ -68,7 +86,10 @@ function SmokeTest.run()
         events = events_copy,
         sections_map = sections_map,
         navigation_plan = navigation_plan,
-        navigation_report = navigation_report
+        navigation_report = navigation_report,
+        position_result = position_result,
+        position_snapshot = position_snapshot,
+        position_report = position_report
     })
 
     return {
@@ -77,6 +98,9 @@ function SmokeTest.run()
         sections_map = sections_map,
         navigation_plan = navigation_plan,
         navigation_report = navigation_report,
+        position_result = position_result,
+        position_snapshot = position_snapshot,
+        position_report = position_report,
         report = report_text
     }
 end
@@ -102,6 +126,9 @@ function SmokeTest.format_reaper_report(result)
     table.insert(lines, "")
     table.insert(lines, "=== Navigation Plan ===")
     table.insert(lines, tostring(result.navigation_report or navigation.format_navigation_plan(result.navigation_plan)))
+    table.insert(lines, "")
+    table.insert(lines, "=== Position Snapshot ===")
+    table.insert(lines, tostring(result.position_report or position.format_position_snapshot(result.position_snapshot)))
 
     local ev_count = result.events and #result.events or 0
     table.insert(lines, "Logger Event Count: " .. tostring(ev_count))
