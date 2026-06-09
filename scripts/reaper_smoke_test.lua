@@ -44,6 +44,7 @@ configure_package_path()
 
 local bootstrap = require("scripts.bootstrap")
 local logger = require("scripts.logger")
+local navigation = require("scripts.navigation")
 local state = require("scripts.state")
 
 local SmokeTest = {}
@@ -51,6 +52,10 @@ local SmokeTest = {}
 function SmokeTest.run()
     logger.clear()
     local ctx = bootstrap.initialize_app()
+    local sections = ctx and ctx.validation and ctx.validation.sections or {}
+    local sections_map = navigation.format_sections_map(sections)
+    local navigation_plan = navigation.plan_initial_navigation(sections)
+    local navigation_report = navigation.format_navigation_plan(navigation_plan)
     local events = logger.get_events()
 
     local events_copy = {}
@@ -60,12 +65,18 @@ function SmokeTest.run()
 
     local report_text = SmokeTest.format_reaper_report({
         context = ctx,
-        events = events_copy
+        events = events_copy,
+        sections_map = sections_map,
+        navigation_plan = navigation_plan,
+        navigation_report = navigation_report
     })
 
     return {
         context = ctx,
         events = events_copy,
+        sections_map = sections_map,
+        navigation_plan = navigation_plan,
+        navigation_report = navigation_report,
         report = report_text
     }
 end
@@ -85,6 +96,12 @@ function SmokeTest.format_reaper_report(result)
     table.insert(lines, "Section Count: " .. tostring(v.sections and #v.sections or 0))
     table.insert(lines, "Final State: " .. tostring(state.get_current()))
     table.insert(lines, "Summary: " .. tostring(v.summary))
+    table.insert(lines, "")
+    table.insert(lines, "=== Sections Map ===")
+    table.insert(lines, tostring(result.sections_map or navigation.format_sections_map(v.sections or {})))
+    table.insert(lines, "")
+    table.insert(lines, "=== Navigation Plan ===")
+    table.insert(lines, tostring(result.navigation_report or navigation.format_navigation_plan(result.navigation_plan)))
 
     local ev_count = result.events and #result.events or 0
     table.insert(lines, "Logger Event Count: " .. tostring(ev_count))
