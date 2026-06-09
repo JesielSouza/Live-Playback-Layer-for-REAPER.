@@ -41,6 +41,8 @@ O projeto superou o estágio de Bootstrap Inicial. Já implementa:
 * Parser lógico puro de Regions (`scripts/regions.lua`).
 * Adapter testável de projeto REAPER (`scripts/project.lua`).
 * A Máquina de Estados Finita Core em memória (`scripts/state.lua`), ainda desvinculada de Logging de arquivo, UI e Transport.
+* O Validator Core para checar a integridade do projeto (`scripts/validator.lua`).
+* O Bootstrap Integration Pipeline que integra as camadas Base de forma testável (`scripts/bootstrap.lua`).
 
 ## Guardrails
 * **Extensão C++ é proibida** nesta fase do projeto.
