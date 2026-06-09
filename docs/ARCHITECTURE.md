@@ -59,7 +59,7 @@ A arquitetura do **Live Playback Layer for REAPER** é dividida em camadas, de m
 * **Saídas:** Escrita em arquivo local `JSONL`.
 * **Riscos:** I/O bloqueante afetando a performance.
 * **Critérios de Aceite:** Logs assíncronos ou bufados que não afetam o thread principal.
-* **Nota Atual:** O Core JSONL foi implementado de forma isolada, escrevendo eventos estruturados localmente. Contudo, ainda não está injetado automaticamente na State Engine nem acoplado à UI.
+* **Nota Atual:** O Core JSONL foi implementado gerando eventos estruturados localmente. Os Hooks de integração do Logger já conectam os eventos de Bootstrap e as transições do State Engine em memória, contudo a UI não está presente.
 
 ### 9. Validation / Safe Mode Layer
 * **Responsabilidade:** Verificar antes da execução se o projeto está pronto, travando edições perigosas ("Safe Mode").

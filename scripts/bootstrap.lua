@@ -7,6 +7,7 @@
 local project = require("scripts.project")
 local validator = require("scripts.validator")
 local state = require("scripts.state")
+local logger = require("scripts.logger")
 
 local bootstrap = {}
 
@@ -28,8 +29,15 @@ function bootstrap.check_dependencies()
 end
 
 function bootstrap.build_startup_context(project_scan_override)
+    local deps = bootstrap.check_dependencies()
+    logger.info("DEPENDENCIES_CHECKED", {
+        reaper_available = deps.reaper_available,
+        warnings = deps.warnings,
+        errors = deps.errors
+    })
+
     local context = {
-        dependencies = bootstrap.check_dependencies(),
+        dependencies = deps,
         project_scan = {},
         validation = {},
         state = nil,
@@ -43,7 +51,32 @@ function bootstrap.build_startup_context(project_scan_override)
         context.project_scan = project.scan_current_project()
     end
 
+    logger.info("PROJECT_SCANNED", {
+        reaper_available = context.project_scan.reaper_available,
+        region_count = context.project_scan.regions and #context.project_scan.regions or 0,
+        warning_count = context.project_scan.warnings and #context.project_scan.warnings or 0,
+        error_count = context.project_scan.errors and #context.project_scan.errors or 0
+    })
+
     context.validation = validator.validate_project(context.project_scan)
+
+    local v_status = context.validation.status
+    local v_payload = {
+        status = v_status,
+        ok = context.validation.ok,
+        section_count = context.validation.sections and #context.validation.sections or 0,
+        warnings = context.validation.warnings,
+        errors = context.validation.errors,
+        summary = context.validation.summary
+    }
+
+    if v_status == validator.STATUS.READY then
+        logger.info("VALIDATION_READY", v_payload)
+    elseif v_status == validator.STATUS.WARNING then
+        logger.warn("VALIDATION_WARNING", v_payload)
+    elseif v_status == validator.STATUS.BLOCKED then
+        logger.error("VALIDATION_BLOCKED", v_payload)
+    end
 
     return context
 end
@@ -64,12 +97,26 @@ function bootstrap.apply_validation_to_state(validation_result)
 end
 
 function bootstrap.initialize_app(project_scan_override)
+    logger.info("APP_START", { source = "bootstrap.initialize_app" })
+
     state.reset()
     local context = bootstrap.build_startup_context(project_scan_override)
     bootstrap.apply_validation_to_state(context.validation)
 
     -- capture current state name into context
     context.state = state.get_current()
+
+    if context.state == state.STATES.SONG_LOADED then
+        logger.info("STATE_LOADED", {
+            state = context.state,
+            summary = context.validation.summary
+        })
+    elseif context.state == state.STATES.ERROR then
+        logger.error("STATE_ERROR", {
+            state = context.state,
+            summary = context.validation.summary
+        })
+    end
 
     last_startup_context = context
     return context

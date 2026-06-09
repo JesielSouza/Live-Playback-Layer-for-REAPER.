@@ -1,7 +1,9 @@
 local state = require("scripts.state")
+local logger = require("scripts.logger")
 
 local function run_state_tests()
     print("Running state machine tests...\n")
+    logger.clear()
 
     -- Ensure a clean start
     state.reset()
@@ -131,6 +133,42 @@ local function run_state_tests()
     assert(#ctx.sections == 2, "Test 18 failed")
     assert(ctx.current_section.name == "Intro", "Test 18 failed")
     print("Test 18 passed: Context sets and preserves sections properly")
+
+    -- 19. Check if successful transition generates a STATE_TRANSITION log event
+    logger.clear()
+    state.reset()
+    state.dispatch(state.EVENTS.LOAD_SONG_SUCCESS)
+    local events = logger.get_events()
+    local found_transition = false
+    for _, ev in ipairs(events) do
+        if ev.event == "STATE_TRANSITION" and ev.payload.ok == true then
+            found_transition = true
+            break
+        end
+    end
+    assert(found_transition == true, "Test 19 failed")
+    print("Test 19 passed: Successful transition generates STATE_TRANSITION event")
+
+    -- 20. Check if rejected transition generates a STATE_TRANSITION_REJECTED log event
+    logger.clear()
+    state.reset()
+    state.dispatch(state.EVENTS.JUMP_REQUESTED) -- Invalid from IDLE
+    local events2 = logger.get_events()
+    local found_rejection = false
+    for _, ev in ipairs(events2) do
+        if ev.event == "STATE_TRANSITION_REJECTED" and ev.payload.ok == false then
+            found_rejection = true
+            break
+        end
+    end
+    assert(found_rejection == true, "Test 20 failed")
+    print("Test 20 passed: Rejected transition generates STATE_TRANSITION_REJECTED event")
+
+    -- 21. History in memory still works correctly and independently of logger file_path
+    logger.configure({file_path = nil})
+    local hist = state.get_history()
+    assert(#hist > 0, "Test 21 failed")
+    print("Test 21 passed: History in memory continues to function independently of file_path")
 
     print("\nState machine tests passed successfully!")
 end

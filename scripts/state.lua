@@ -4,6 +4,8 @@
     Versão: Pura, testável, apenas memória sem logging em arquivo (MVP 1.0).
 --]]
 
+local logger = require("scripts.logger")
+
 local state = {}
 
 -- Constant States
@@ -159,6 +161,12 @@ function state.can_transition(to_state)
     return false
 end
 
+local function safe_log(level, event_name, payload)
+    pcall(function()
+        logger.log(level, event_name, payload)
+    end)
+end
+
 function state.transition(to_state, event, payload)
     if not instance then state.init() end
     local from_state = instance.current_state
@@ -172,6 +180,12 @@ function state.transition(to_state, event, payload)
             payload = payload or {},
             ok = true
         })
+        safe_log(logger.LEVELS.INFO, "STATE_TRANSITION", {
+            from = from_state,
+            to = to_state,
+            event = event,
+            ok = true
+        })
         return true
     else
         table.insert(instance.history, {
@@ -179,6 +193,13 @@ function state.transition(to_state, event, payload)
             to = to_state,
             event = event,
             payload = payload or {},
+            ok = false,
+            reason = "transition_not_allowed"
+        })
+        safe_log(logger.LEVELS.WARN, "STATE_TRANSITION_REJECTED", {
+            from = from_state,
+            to = to_state,
+            event = event,
             ok = false,
             reason = "transition_not_allowed"
         })

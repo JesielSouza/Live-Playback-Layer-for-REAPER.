@@ -27,5 +27,6 @@ Registrar o uso da ferramenta para fins de debug e auditoria de erros de operaç
 
 ## Estado Atual
 * O Logger Core JSONL já foi implementado de forma isolada, gerando eventos estruturados e gravando em arquivo.
-* Ainda **não** há integração automática desta camada com o Bootstrap ou a State Engine. Esta integração será feita futuramente.
+* O Logger já possui Integration Hooks conectando-o automaticamente ao Bootstrap e à State Engine.
+* Os eventos de inicialização e as transições do FSM estão sendo logados em memória (JSONL).
 * Ainda não existe UI, transporte real, MIDI ou Setlist no projeto.
