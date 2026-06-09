@@ -66,3 +66,9 @@ A arquitetura do **Live Playback Layer for REAPER** é dividida em camadas, de m
 * **Saídas:** Bloqueios de UI ou avisos.
 * **Riscos:** Falsos positivos que bloqueiam o uso normal.
 * **Critérios de Aceite:** Bloquear Play se o projeto atual estiver "quebrado" estruturalmente (ex: sem metadados mínimos).
+
+### 10. Bootstrap Integration Pipeline
+* **Responsabilidade:** Conectar o Project Adapter, o Validator e a State Machine, orquestrando a inicialização da aplicação sem depender da UI.
+* **Fluxo:** Extrai os dados lógicos de `Project.scan_current_project()`, passa para `Validator.validate_project()` e aplica o resultado na Lua State Engine.
+* **Regras de Transição:** Se a validação for `ready` ou `warning`, as seções são injetadas no State que transita para `SONG_LOADED`. Se for `blocked`, o State transita para `ERROR`.
+* **Nota:** Nesta etapa arquitetural, **ainda não há UI** e **ainda não há transporte real**.
