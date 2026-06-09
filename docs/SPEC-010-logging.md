@@ -24,3 +24,8 @@ Registrar o uso da ferramenta para fins de debug e auditoria de erros de operaç
 
 ## Testes Mínimos
 * Injetar 100 mensagens e verificar se 100 linhas foram gravadas no arquivo ao fim da sessão.
+
+## Estado Atual
+* O Logger Core JSONL já foi implementado de forma isolada, gerando eventos estruturados e gravando em arquivo.
+* Ainda **não** há integração automática desta camada com o Bootstrap ou a State Engine. Esta integração será feita futuramente.
+* Ainda não existe UI, transporte real, MIDI ou Setlist no projeto.
