@@ -19,11 +19,11 @@ A arquitetura do **Live Playback Layer for REAPER** é dividida em camadas, de m
 * **Critérios de Aceite:** Regions parseadas de forma correta sem falhar silenciosamente se houver formato inválido.
 
 ### 3. Lua State Engine
-* **Responsabilidade:** Manter o estado da aplicação (máquina de estados), gerenciar transições e orquestrar as outras camadas.
-* **Entradas:** Comandos de UI, triggers MIDI, eventos de timer e posição do playhead.
-* **Saídas:** Atualização de estado, chamadas para Transport Control e Logging.
-* **Riscos:** Concorrência com os threads do REAPER, loops bloqueantes.
-* **Critérios de Aceite:** Responde em tempo real sem travar a interface do REAPER; estados bem definidos sem condições de corrida.
+* **Responsabilidade:** Manter o estado da aplicação em uma Finite State Machine (FSM), validando transições permitidas, rejeitando intents proibidos, e orquestrando as outras camadas de forma pura. Foi concebida como um módulo testável (singleton) independente do REAPER em `scripts/state.lua`.
+* **Entradas:** Eventos de dispatch atrelados a intents de sistema (ex: `PLAY_REQUESTED`, `JUMP_COMPLETED`).
+* **Saídas:** Atualização de contexto, armazenamento de histórico de transições em memória (o logging em arquivo será atrelado posteriormente).
+* **Riscos:** Concorrência e bloqueio se as operações de atualização de estado forem onerosas.
+* **Critérios de Aceite:** Transições seguem estritamente as regras de grafos de estados definidos em `STATE-MODEL.md`.
 
 ### 4. Transport Control Layer
 * **Responsabilidade:** Manipular a posição do playhead, Play, Stop, Loop, Jump de forma segura.

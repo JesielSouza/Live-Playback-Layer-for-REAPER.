@@ -37,7 +37,10 @@ Nota: O adapter que realiza as chamadas de API nativas para interagir com o REAP
 No futuro, a instalação se dará copiando os scripts para a pasta de `Scripts` do REAPER e importando a action principal que chamará o script `main.lua`, montando a UI sobre a instância aberta do projeto ou configurando ações de atalho.
 
 ## Estado Atual
-O repositório está no estágio de **Bootstrap Inicial**, com a criação da estrutura de arquivos base, os stubs para os scripts em Lua e a criação da documentação principal (Arquitetura, Especificações, Estado, etc.). Nenhuma implementação funcional está em vigor neste momento.
+O projeto superou o estágio de Bootstrap Inicial. Já implementa:
+* Parser lógico puro de Regions (`scripts/regions.lua`).
+* Adapter testável de projeto REAPER (`scripts/project.lua`).
+* A Máquina de Estados Finita Core em memória (`scripts/state.lua`), ainda desvinculada de Logging de arquivo, UI e Transport.
 
 ## Guardrails
 * **Extensão C++ é proibida** nesta fase do projeto.

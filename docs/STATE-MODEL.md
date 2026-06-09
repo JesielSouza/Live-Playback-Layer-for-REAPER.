@@ -1,8 +1,8 @@
 # State Model
 
-O núcleo operacional (Lua State Engine) baseia-se numa Máquina de Estados Finita (FSM) que garante controle previsível durante a reprodução.
+O núcleo operacional (Lua State Engine) baseia-se numa Máquina de Estados Finita (FSM) (implementada puramente e testável em `scripts/state.lua`) que garante controle previsível durante a reprodução.
 
-## Estados
+## Estados Implementados
 
 * `IDLE`: Inicializado, aguardando carregamento ou ações. Nenhuma música em fila.
 * `SONG_LOADED`: Um projeto/música foi carregado e validado. Playhead parado.
@@ -11,40 +11,56 @@ O núcleo operacional (Lua State Engine) baseia-se numa Máquina de Estados Fini
 * `JUMP_PENDING`: Reprodução ativa. O sistema recebeu ordem para pular para outra section e aguarda o ponto de sincronismo (ex: final do compasso) para efetuar o pulo.
 * `FADING_OUT`: Executando rotina de fade-out antes de parar ou transicionar para a próxima música.
 * `STOPPED`: Reprodução parada, mas a música ainda está carregada (geralmente após o fim de uma música).
-* `PANIC`: Parada emergencial, desliga áudio e MIDI imediatamente (mute all).
+* `PANIC`: Parada emergencial sistêmica.
 * `ERROR`: Estado não operável devido a falha sistêmica ou carregamento corrompido.
 
 ## Transições Permitidas
+A FSM reforça rigorosamente:
 * `IDLE` -> `SONG_LOADED`
 * `SONG_LOADED` -> `PLAYING`
-* `PLAYING` -> `STOPPED` | `SECTION_LOOPING` | `JUMP_PENDING` | `FADING_OUT` | `PANIC`
-* `SECTION_LOOPING` -> `PLAYING` | `STOPPED` | `JUMP_PENDING` | `FADING_OUT` | `PANIC`
-* `JUMP_PENDING` -> `PLAYING` | `SECTION_LOOPING` | `PANIC`
-* `FADING_OUT` -> `STOPPED` | `PANIC`
-* `STOPPED` -> `SONG_LOADED` | `PLAYING`
-* `*` -> `PANIC`
-* `*` -> `ERROR` (qualquer falha grave)
-* `PANIC` -> `IDLE` (apenas reset manual)
-* `ERROR` -> `IDLE` (apenas reset manual)
+* `PLAYING` -> `JUMP_PENDING`
+* `JUMP_PENDING` -> `PLAYING`
+* `PLAYING` -> `SECTION_LOOPING`
+* `SECTION_LOOPING` -> `PLAYING`
+* `PLAYING` -> `FADING_OUT`
+* `FADING_OUT` -> `STOPPED`
+* `PLAYING` -> `STOPPED`
+* `STOPPED` -> `PLAYING`
+* `ANY` -> `PANIC`
+* `PANIC` -> `STOPPED`
+* `ANY` -> `ERROR`
+* `ERROR` -> `SONG_LOADED` (se música carregada) ou `IDLE`
+* `STOPPED` -> `SONG_LOADED`
+* `SONG_LOADED` -> `STOPPED`
 
-## Transições Proibidas
+## Transições Proibidas Importantes Rejeitadas (Exemplos)
 * `IDLE` -> `PLAYING` (deve carregar antes)
-* `PANIC` -> `PLAYING` (exige reset e recarregamento)
 * `ERROR` -> `PLAYING` (exige resolução do erro)
-* Pulos de `JUMP_PENDING` direto para `STOPPED` (o jump deve ser finalizado ou abortado para `FADING_OUT` / `PANIC`).
+* `PANIC` -> `PLAYING` (exige clear do panic e stop)
+* `FADING_OUT` -> `JUMP_PENDING`
+* `IDLE` -> `JUMP_PENDING`
+* `IDLE` -> `SECTION_LOOPING`
+* `IDLE` -> `FADING_OUT`
 
-## Eventos
-* `CMD_LOAD`: Carrega música.
-* `CMD_PLAY`: Inicia transporte.
-* `CMD_STOP`: Para transporte.
-* `CMD_JUMP`: Define próximo alvo de pulo.
-* `CMD_LOOP`: Ativa loop na section atual.
-* `CMD_PANIC`: Emergência.
-* `EV_SYNC_POINT_REACHED`: Ponto de sincronismo (fim da section, etc.) alcançado pelo playhead.
+## Eventos de Dispatch Aceitos
+Os eventos de intent que mudam a máquina são:
+* `LOAD_SONG_SUCCESS`
+* `PLAY_REQUESTED`
+* `STOP_REQUESTED`
+* `LOOP_ENABLED`
+* `LOOP_DISABLED`
+* `JUMP_REQUESTED`
+* `JUMP_COMPLETED`
+* `FADE_REQUESTED`
+* `FADE_COMPLETED`
+* `PANIC_REQUESTED`
+* `PANIC_CLEARED`
+* `ERROR_RAISED`
+* `ERROR_CLEARED`
+* `RESET_REQUESTED`
 
-## Regra de Recuperação
-No caso de `PANIC` ou `ERROR`, o sistema desarma imediatamente e volta para `IDLE` de forma limpa, não tentando restaurar o transporte sozinho. O operador precisa intervir e enviar `CMD_LOAD`.
-
-## Regras de Logging
-* Toda e qualquer transição de estado deve ser registrada na camada de Log, com timestamp e a causa/evento que provocou a transição.
-* Transições para `PANIC` e `ERROR` registram o máximo de contexto (posição do playhead, música atual, stack trace se aplicável).
+## Histórico em Memória e Logging
+* Toda e qualquer tentativa de transição de estado (`dispatch` ou `transition`) é registrada em um histórico em memória interno à FSM (`state.get_history()`).
+* Este registro marca o estado de origem (`from`), o alvo (`to`), o `event`, e a confirmação se foi aceito (`ok=true`) ou rejeitado (`ok=false`, com a propriedade `reason`).
+* **Nota MVP 1.0:** No momento, o registro ocorre *apenas em memória*. A serialização disto para um log físico JSONL em arquivo ainda não está implementada nesta fase.
+* **Nota de Escopo:** O gerenciador de estado atualmente orquestra o fluxo de permissões da lógica do projeto. Componentes físicos/visuais como UI, motor de Transporte real de DAW, parsing MIDI e gerenciamento de Setlist ainda não foram implementados.
