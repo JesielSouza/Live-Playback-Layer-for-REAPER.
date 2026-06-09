@@ -46,35 +46,22 @@ local bootstrap = require("scripts.bootstrap")
 local logger = require("scripts.logger")
 local navigation = require("scripts.navigation")
 local position = require("scripts.position")
+local runtime = require("scripts.runtime")
 local state = require("scripts.state")
 
 local SmokeTest = {}
 
 function SmokeTest.run()
-    logger.clear()
-    local ctx = bootstrap.initialize_app()
+    local runtime_snapshot = runtime.build_snapshot()
+    local ctx = runtime_snapshot.context
     local sections = ctx and ctx.validation and ctx.validation.sections or {}
     local sections_map = navigation.format_sections_map(sections)
     local navigation_plan = navigation.plan_initial_navigation(sections)
     local navigation_report = navigation.format_navigation_plan(navigation_plan)
-    local position_result = position.get_reaper_position()
-    local position_snapshot = nil
-    if position_result.ok then
-        position_snapshot = position.build_position_snapshot(sections, position_result.position)
-    else
-        position_snapshot = {
-            ok = false,
-            position = position_result.position,
-            current_section = nil,
-            previous_section = nil,
-            next_section = nil,
-            navigation_plan = nil,
-            warnings = position_result.warnings or {},
-            errors = position_result.errors or {}
-        }
-    end
+    local position_snapshot = runtime_snapshot.position_snapshot
     local position_report = position.format_position_snapshot(position_snapshot)
-    local events = logger.get_events()
+    local runtime_report = runtime.format_snapshot(runtime_snapshot)
+    local events = runtime_snapshot.events or logger.get_events()
 
     local events_copy = {}
     for _, ev in ipairs(events) do
@@ -87,9 +74,10 @@ function SmokeTest.run()
         sections_map = sections_map,
         navigation_plan = navigation_plan,
         navigation_report = navigation_report,
-        position_result = position_result,
         position_snapshot = position_snapshot,
-        position_report = position_report
+        position_report = position_report,
+        runtime_snapshot = runtime_snapshot,
+        runtime_report = runtime_report
     })
 
     return {
@@ -98,9 +86,10 @@ function SmokeTest.run()
         sections_map = sections_map,
         navigation_plan = navigation_plan,
         navigation_report = navigation_report,
-        position_result = position_result,
         position_snapshot = position_snapshot,
         position_report = position_report,
+        runtime_snapshot = runtime_snapshot,
+        runtime_report = runtime_report,
         report = report_text
     }
 end
@@ -129,9 +118,9 @@ function SmokeTest.format_reaper_report(result)
     table.insert(lines, "")
     table.insert(lines, "=== Position Snapshot ===")
     table.insert(lines, tostring(result.position_report or position.format_position_snapshot(result.position_snapshot)))
+    table.insert(lines, "")
+    table.insert(lines, tostring(result.runtime_report or runtime.format_snapshot(result.runtime_snapshot)))
 
-    local ev_count = result.events and #result.events or 0
-    table.insert(lines, "Logger Event Count: " .. tostring(ev_count))
     table.insert(lines, "-------------------------------------------------")
     table.insert(lines, "NOTE: No transport actions were triggered.")
     table.insert(lines, "This script is completely read-only.")
