@@ -43,6 +43,7 @@ O projeto superou o estágio de Bootstrap Inicial. Já implementa:
 * A Máquina de Estados Finita Core em memória (`scripts/state.lua`), ainda desvinculada de Logging de arquivo, UI e Transport.
 * O Validator Core para checar a integridade do projeto (`scripts/validator.lua`).
 * O Bootstrap Integration Pipeline que integra as camadas Base de forma testável (`scripts/bootstrap.lua`).
+* Logger Core JSONL para gravação isolada de logs sem dependências (`scripts/logger.lua` e utilitários), ainda não integrado com Bootstrap/State.
 
 ## Guardrails
 * **Extensão C++ é proibida** nesta fase do projeto.

@@ -56,4 +56,55 @@ function utils.shallow_copy(value)
     return copy
 end
 
+function utils.to_json(value)
+    local t = type(value)
+    if t == "string" then
+        -- Escape double quotes, backslashes, and control characters simply
+        local escaped = value:gsub("\\", "\\\\")
+                             :gsub("\"", "\\\"")
+                             :gsub("\n", "\\n")
+                             :gsub("\r", "\\r")
+                             :gsub("\t", "\\t")
+        return '"' .. escaped .. '"'
+    elseif t == "number" or t == "boolean" then
+        return tostring(value)
+    elseif t == "nil" then
+        return "null"
+    elseif t == "table" then
+        -- Basic check for array vs object
+        local is_array = true
+        local max_k = 0
+        local count = 0
+        for k, _ in pairs(value) do
+            if type(k) ~= "number" or k <= 0 or math.floor(k) ~= k then
+                is_array = false
+                break
+            end
+            max_k = math.max(max_k, k)
+            count = count + 1
+        end
+        if is_array and max_k ~= count then
+            is_array = false
+        end
+
+        local parts = {}
+        if is_array then
+            for i = 1, max_k do
+                table.insert(parts, utils.to_json(value[i]))
+            end
+            return "[" .. table.concat(parts, ",") .. "]"
+        else
+            -- Object
+            for k, v in pairs(value) do
+                local key_str = type(k) == "string" and k or tostring(k)
+                table.insert(parts, utils.to_json(key_str) .. ":" .. utils.to_json(v))
+            end
+            return "{" .. table.concat(parts, ",") .. "}"
+        end
+    else
+        -- Fallback for unsupported types
+        return '"<' .. t .. '>"'
+    end
+end
+
 return utils
