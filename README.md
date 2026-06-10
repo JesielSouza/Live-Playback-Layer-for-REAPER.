@@ -36,6 +36,8 @@ Nota: O adapter que realiza as chamadas de API nativas para interagir com o REAP
 ## VS Real Dry Run
 Para validar a UI read-only em um Virtual Soundcheck ou ensaio real, use a checklist operacional em [`tests/vs-real-dry-run-checklist.md`](tests/vs-real-dry-run-checklist.md). Esta fase é apenas dry run: a UI observa o runtime e não aciona transporte nem altera o projeto.
 
+O primeiro registro de execução do dry run está em [`tests/vs-real-dry-run-report.md`](tests/vs-real-dry-run-report.md).
+
 ## Instalação Futura
 No futuro, a instalação se dará copiando os scripts para a pasta de `Scripts` do REAPER e importando a action principal que chamará o script `main.lua`, montando a UI sobre a instância aberta do projeto ou configurando ações de atalho.
 
