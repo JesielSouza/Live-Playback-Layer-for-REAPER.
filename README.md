@@ -7,47 +7,43 @@ A safety-first playback control layer for REAPER, designed for live performance.
 *   **Operator Mode**: A simplified UI for live operation.
 *   **Song Map / Visual Timeline**: See your song as a sequence of blocks.
 *   **Manual Section Selection**: Click any section on the Song Map to set it as the next target.
+*   **Mixer / Stems**: Control your tracks directly from the UI.
+    *   **Automatic Classification**: Tracks are categorized by name (Click, Guide, Drums, Bass, etc.).
+    *   **Mute/Solo/Volume**: Dedicated controls for each stem.
 *   **Section Awareness**: Automatic detection of current and next sections based on project Regions.
 *   **Safety Gates**: Multiple layers of validation before any real transport action is taken.
-*   **Explicit Execution**: No automatic jumps. All actions require explicit operator intent.
+*   **Explicit Execution**: No automatic jumps. All actions (Move, Seek, Play, Stop) require explicit operator intent.
 *   **Dry-run Validation**: Every intent is simulated and audited before execution.
 
 ## How to Use
 
 1.  **Prepare your Project**:
     *   Create **Regions** for each section of your song (e.g., "INTRO", "VERSE_1", "CHORUS_1").
-    *   Ensure regions are contiguous and well-named.
+    *   Name your **Tracks** clearly (e.g., "CLICK", "GUIDE", "DRUMS", "BASS", "KEYS", "GTR", "VOX").
 2.  **Open the Script**:
     *   In REAPER, go to `Actions > Show action list`.
     *   Search for `reaper_ui.lua`.
     *   Run the script.
 3.  **Operator Workflow**:
-    *   **Song Map**: The visual timeline shows all sections.
-        *   `> SECTION`: Current playing section.
-        *   `>> SECTION`: Automatic next target.
-        *   `* SECTION`: Manually selected target.
-    *   **Manual Selection**: Click any block in the Song Map to select a specific section to jump to.
-    *   **Confirm Intent**: Click to confirm the "Active Target" (either the automatic next or your selection).
-    *   **Arm**: Click to enable execution.
-    *   **Move Cursor**: Moves the edit cursor to the target section.
-    *   **Jump/Seek Now**: Immediately seeks playback to the target section.
-    *   **Loop Current**: Re-triggers the start of the current section.
-    *   **Play/Stop**: Manual transport control.
-    *   **Clear**: Resets confirmation, selection, and disarms execution.
+    *   **Song Map**: Visual timeline for navigation. Click to select a target.
+    *   **Confirm & Arm**: The safety sequence to enable transport buttons.
+    *   **Mixer**: Adjust levels and states of your stems during the performance.
+    *   **Play/Stop**: Primary transport controls.
 
 ## Safety Guarantees
 
-*   **No `Main_OnCommand`**: We use specific REAPER APIs for transport.
-*   **Limited API Whitelist**: Only `SetEditCurPos`, `OnPlayButton`, `OnStopButton`, `GetPlayState`, and `GetPlayPosition` are used for real actions.
-*   **Locked by Default**: Real actions require explicit Confirmation + Arming.
-*   **Automatic Disarm**: The session is disarmed automatically after any execution attempt.
+*   **No `Main_OnCommand`**: We use specific REAPER APIs for transport and mixer control.
+*   **Limited API Whitelist**: Only authorized APIs are used for real actions.
+*   **Locked by Default**: Transport actions require explicit Confirmation + Arming.
+*   **Explicit Mixer**: Mixer writes only happen on explicit button clicks.
 
 ## Technical Details
 
-Built with Lua and ReaImGui. The architecture separates the **Runtime** (read-only snapshot) from the **Transport Adapter** (real REAPER calls) via a **Safety Gate** and **Simulator**.
+Built with Lua and ReaImGui.
 
-New layers in v0.2:
-*   **SongMap**: Normalizes sections from project regions.
-*   **UITimeline**: Models the visual representation of the song structure.
+New layers in v0.3:
+*   **TrackAdapter**: Isolates REAPER track and mixer APIs.
+*   **TrackCatalog**: Classifies tracks into musical categories.
+*   **UIMixer**: Models the visual mixer representation.
 
 See `docs/ARCHITECTURE.md` for more information.

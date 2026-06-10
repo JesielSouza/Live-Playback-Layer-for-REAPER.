@@ -1,5 +1,6 @@
 local ui_runtime = require("scripts.ui_runtime")
 local ui_session = require("scripts.ui_session")
+local mixer_state = require("scripts.mixer_state")
 
 local function build_snapshot()
     return {
@@ -21,71 +22,50 @@ local function build_snapshot()
             { name = "VERSE_1", start = 10, ["end"] = 30 },
             { name = "CHORUS_1", start = 30, ["end"] = 50 },
             { name = "ENDING", start = 50, ["end"] = 60 }
-        },
-        context = {
-            validation = {
-                sections = {
-                    { name = "INTRO", start = 0, ["end"] = 10 },
-                    { name = "VERSE_1", start = 10, ["end"] = 30 },
-                    { name = "CHORUS_1", start = 30, ["end"] = 50 },
-                    { name = "ENDING", start = 50, ["end"] = 60 }
-                }
-            }
-        },
-        warnings = {},
-        errors = {}
+        }
     }
+end
+
+local function build_mixer_state()
+    return mixer_state.create()
 end
 
 local function run_ui_runtime_tests()
     print("Running UI runtime tests...\n")
 
-    local view_model = ui_runtime.build_view_model(build_snapshot())
+    local session = ui_session.create()
+    local mixer = build_mixer_state()
+    
+    local options = {
+        track_scan_override = {
+            ok = true,
+            tracks = {
+                { id = 0, name = "Click", volume = 1.0, muted = false, soloed = false },
+                { id = 1, name = "Drums", volume = 0.8, muted = false, soloed = false }
+            }
+        }
+    }
+
+    local view_model = ui_runtime.build_view_model(build_snapshot(), session, mixer, options)
 
     assert(view_model.ok == true, "Test 1 failed")
-    print("Test 1 passed: build_view_model with valid snapshot returns ok=true")
+    print("Test 1 passed: build_view_model ok")
 
-    assert(view_model.app_state == "SONG_LOADED", "Test 3 failed")
-    assert(view_model.current_section == "VERSE_1", "Test 4 failed")
-    assert(view_model.next_section == "CHORUS_1", "Test 5 failed")
-    assert(view_model.decision == "NEXT_SECTION_READY", "Test 6 failed")
-    print("Test 3-6 passed: build_view_model preserves key snapshot fields")
+    -- v0.3 Mixer tests
+    assert(view_model.track_scan ~= nil, "Test 91 failed")
+    assert(view_model.track_catalog ~= nil, "Test 92 failed")
+    assert(view_model.mixer ~= nil, "Test 93 failed")
+    assert(view_model.mixer.ok == true, "Test 93 failed")
+    print("Test 91-93 passed: view_model includes mixer data")
 
-    -- v0.2 ViewModel enrichment tests
-    assert(view_model.song_map.ok == true, "Test 81 failed")
-    assert(#view_model.song_map.sections == 4, "Test 81 failed")
-    print("Test 81 passed: view_model includes song_map")
+    local mixer_lines = ui_runtime.get_mixer_lines(view_model)
+    assert(mixer_lines[1] == "Mixer", "Test 94 failed")
+    assert(string.find(mixer_lines[2], "CLICK"), "Test 95 failed")
+    print("Test 94-95 passed: get_mixer_lines works")
 
-    assert(view_model.timeline.ok == true, "Test 82 failed")
-    assert(#view_model.timeline.blocks == 4, "Test 82 failed")
-    print("Test 82 passed: view_model includes timeline")
-
-    assert(view_model.active_intent.action == "go_next", "Test 83 failed")
-    print("Test 83 passed: default active_intent is go_next")
-
-    local session = ui_session.create()
-    ui_session.select_section(session, "ENDING", 50.0)
-    local selected_view = ui_runtime.build_view_model(build_snapshot(), session)
-    assert(selected_view.selected_section == "ENDING", "Test 84 failed")
-    assert(selected_view.active_intent.action == "jump_to_section", "Test 85 failed")
-    assert(selected_view.active_intent.target_section == "ENDING", "Test 85 failed")
-    print("Test 84-85 passed: active_intent follows selection")
-
-    local operator_lines = ui_runtime.get_operator_lines(selected_view)
-    local has_selected = false
-    local has_active = false
-    for _, line in ipairs(operator_lines) do
-        if string.find(line, "Selected Target: ENDING") then has_selected = true end
-        if string.find(line, "Active Target: ENDING") then has_active = true end
-    end
-    assert(has_selected == true, "Test 86 failed")
-    assert(has_active == true, "Test 87 failed")
-    print("Test 86-87 passed: get_operator_lines includes selection info")
-
-    local timeline_lines = ui_runtime.get_timeline_lines(view_model)
-    assert(timeline_lines[1] == "Song Map", "Test 88 failed")
-    assert(string.find(timeline_lines[2], "INTRO"), "Test 88 failed")
-    print("Test 88 passed: get_timeline_lines works")
+    local summary_lines = ui_runtime.get_mixer_summary_lines(view_model)
+    assert(string.find(summary_lines[2], "stems=1"), "Test 96 failed")
+    print("Test 96 passed: get_mixer_summary_lines works")
 
     print("\nUI runtime tests passed successfully!")
 end

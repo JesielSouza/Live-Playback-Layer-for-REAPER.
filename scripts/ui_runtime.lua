@@ -14,6 +14,10 @@ local SafetyDashboard = require("scripts.safety_dashboard")
 local UISession = require("scripts.ui_session")
 local SongMap = require("scripts.song_map")
 local UITimeline = require("scripts.ui_timeline")
+local TrackAdapter = require("scripts.track_adapter")
+local TrackCatalog = require("scripts.track_catalog")
+local UIMixer = require("scripts.ui_mixer")
+local MixerState = require("scripts.mixer_state")
 
 local function text_or_nil(value)
     if value == nil then
@@ -91,17 +95,26 @@ local function apply_labels(view_model)
     view_model.status_line = UIRuntime.format_status_line(view_model)
 end
 
-function UIRuntime.build_view_model(snapshot, ui_session)
+function UIRuntime.build_view_model(snapshot, ui_session, mixer_state, options)
+    options = options or {}
     local adapter_capabilities = TransportAdapter.get_capabilities({})
     local session_state = UISession.get_state(ui_session)
     local playback_status = TransportControl.get_playback_status({})
-    local song_map = SongMap.build(snapshot)
+    local current_mixer_state = MixerState.get_state(mixer_state)
     
-    -- Selection logic
+    local song_map = SongMap.build(snapshot)
     if session_state.selected_section then
         SongMap.select_section(song_map, session_state.selected_section)
     end
     local timeline = UITimeline.build(song_map, {})
+
+    -- Track Scan and Mixer logic
+    local track_scan = options.track_scan_override
+    if not track_scan and not options.disable_track_scan then
+        track_scan = TrackAdapter.scan_tracks({})
+    end
+    local track_catalog = TrackCatalog.build(track_scan)
+    local mixer = UIMixer.build(track_catalog, current_mixer_state)
 
     if type(snapshot) ~= "table" then
         local transport_gate_result = TransportGate.evaluate(nil, nil)
@@ -185,6 +198,10 @@ function UIRuntime.build_view_model(snapshot, ui_session)
             playback_status = playback_status,
             song_map = song_map,
             timeline = timeline,
+            track_scan = track_scan,
+            track_catalog = track_catalog,
+            mixer = mixer,
+            last_mixer_result = current_mixer_state.last_mixer_result,
             operator_summary = {
                 playback = playback_state_label(playback_status),
                 current_section = "nil",
@@ -304,6 +321,10 @@ function UIRuntime.build_view_model(snapshot, ui_session)
         song_map = song_map,
         timeline = timeline,
         selected_section = session_state.selected_section,
+        track_scan = track_scan,
+        track_catalog = track_catalog,
+        mixer = mixer,
+        last_mixer_result = current_mixer_state.last_mixer_result,
         operator_summary = {
             playback = playback_state_label(playback_status),
             current_section = text_or_nil(snapshot.current_section),
@@ -422,6 +443,24 @@ function UIRuntime.get_timeline_lines(view_model)
     end
     
     return lines
+end
+
+function UIRuntime.get_mixer_lines(view_model)
+    view_model = view_model or {}
+    local mixer = view_model.mixer or {}
+    local lines = { "Mixer" }
+    
+    for _, row in ipairs(UIMixer.get_track_rows(mixer)) do
+        table.insert(lines, row.label)
+    end
+    
+    return lines
+end
+
+function UIRuntime.get_mixer_summary_lines(view_model)
+    view_model = view_model or {}
+    local mixer = view_model.mixer or {}
+    return UIMixer.get_summary_lines(mixer)
 end
 
 function UIRuntime.get_transport_preview_lines(view_model)
@@ -592,7 +631,7 @@ function UIRuntime.get_pre_execution_audit_lines(view_model)
         "Manual Confirmed: " .. bool_label(audit.manual_confirmed == true),
         "Gate Reason: " .. text_or_nil(audit.gate_reason),
         "Simulation Message: " .. text_or_nil(audit.simulation_message),
-        "Preflight Status: " .. text_or_nil(snapshot and snapshot.preflight_status or "nil"),
+        "Preflight Status: " .. text_or_nil(audit.preflight_status),
         "Safety Level: " .. text_or_nil(audit.safety_level),
         "Adapter Locked: " .. bool_label(audit.adapter_locked == true),
         "Seek Locked: " .. bool_label(audit.seek_locked == true),

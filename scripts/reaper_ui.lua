@@ -60,9 +60,13 @@ local Runtime = require("scripts.runtime")
 local UIRuntime = require("scripts.ui_runtime")
 local UISession = require("scripts.ui_session")
 local TransportControl = require("scripts.transport_control")
+local MixerState = require("scripts.mixer_state")
+local TrackAdapter = require("scripts.track_adapter")
+local UIMixer = require("scripts.ui_mixer")
 
 local ctx = ImGui.CreateContext("Live Playback Layer")
 local ui_session = UISession.create()
+local mixer_state = MixerState.create()
 local frame_count = 0
 
 local function value_or_nil(value)
@@ -99,7 +103,7 @@ local function loop()
 
     local view_model = nil
     if snapshot_ok then
-        view_model = UIRuntime.build_view_model(snapshot, ui_session)
+        view_model = UIRuntime.build_view_model(snapshot, ui_session, mixer_state)
         view_model.frame_count = frame_count
     end
 
@@ -109,11 +113,11 @@ local function loop()
         if snapshot_ok and view_model then
             local summary = view_model.operator_summary or {}
             
-            -- Playback Status (Grande)
+            -- 1. Playback Status (Grande)
             render_separator()
             ImGui.Text(ctx, "PLAYBACK: " .. string.upper(summary.playback or "UNKNOWN"))
             
-            -- Visual Timeline / Song Map
+            -- 2. Visual Timeline / Song Map
             render_separator()
             ImGui.Text(ctx, "Song Map")
             local blocks = view_model.timeline and view_model.timeline.blocks or {}
@@ -134,6 +138,7 @@ local function loop()
                 end
             end
 
+            -- 3. Operator Panel
             render_separator()
             ImGui.Text(ctx, "Operator Panel")
             for _, line in ipairs(UIRuntime.get_operator_lines(view_model)) do
@@ -226,6 +231,56 @@ local function loop()
                 UISession.disarm_execution(ui_session)
             end
 
+            -- 4. Mixer / Stems
+            render_separator()
+            if ImGui.Button(ctx, (MixerState.is_visible(mixer_state) and "Hide Mixer" or "Show Mixer")) then
+                MixerState.toggle_visible(mixer_state)
+            end
+
+            if MixerState.is_visible(mixer_state) then
+                ImGui.Text(ctx, "Mixer / Stems")
+                for _, line in ipairs(UIRuntime.get_mixer_summary_lines(view_model)) do
+                    ImGui.Text(ctx, line)
+                end
+
+                local mixer = view_model.mixer or {}
+                for _, section in ipairs(UIMixer.get_category_sections(mixer)) do
+                    if ImGui.CollapsingHeader(ctx, UIMixer.format_category_header(section), ImGui.TreeNodeFlags_DefaultOpen) then
+                        for _, row in ipairs(section.rows) do
+                            ImGui.Text(ctx, string.format("%d%%", row.volume_percent or 0))
+                            ImGui.SameLine(ctx)
+                            if ImGui.Button(ctx, (row.muted and "UNMUTE" or "MUTE") .. "##m" .. row.track_id) then
+                                local res = TrackAdapter.set_track_mute(row.track_id, not row.muted, { enable_mixer_write = true })
+                                MixerState.set_last_mixer_result(mixer_state, res)
+                            end
+                            ImGui.SameLine(ctx)
+                            if ImGui.Button(ctx, (row.soloed and "UNSOLO" or "SOLO") .. "##s" .. row.track_id) then
+                                local res = TrackAdapter.set_track_solo(row.track_id, not row.soloed, { enable_mixer_write = true })
+                                MixerState.set_last_mixer_result(mixer_state, res)
+                            end
+                            ImGui.SameLine(ctx)
+                            if ImGui.Button(ctx, "V-##v-" .. row.track_id) then
+                                local res = TrackAdapter.set_track_volume(row.track_id, (row.volume or 0) - 0.05, { enable_mixer_write = true })
+                                MixerState.set_last_mixer_result(mixer_state, res)
+                            end
+                            ImGui.SameLine(ctx)
+                            if ImGui.Button(ctx, "V+##v+" .. row.track_id) then
+                                local res = TrackAdapter.set_track_volume(row.track_id, (row.volume or 0) + 0.05, { enable_mixer_write = true })
+                                MixerState.set_last_mixer_result(mixer_state, res)
+                            end
+                            ImGui.SameLine(ctx)
+                            ImGui.Text(ctx, row.name)
+                        end
+                    end
+                end
+
+                local last_res = MixerState.get_last_mixer_result(mixer_state)
+                if last_res then
+                    ImGui.Text(ctx, "Last Mixer Action: " .. TrackAdapter.format_result(last_res))
+                end
+            end
+
+            -- 5. Debug
             render_separator()
             local debug_label = view_model.debug_visible and "Hide Debug" or "Show Debug"
             if ImGui.Button(ctx, debug_label) then

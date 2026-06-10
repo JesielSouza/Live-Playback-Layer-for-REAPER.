@@ -1,45 +1,34 @@
-# Manual Test Checklist: Sprint v0.2 Visuals
+# Manual Test Checklist: Sprint v0.3 Mixer
 
-This checklist ensures the v0.2 features work correctly inside REAPER.
+This checklist ensures the v0.3 Mixer features work correctly inside REAPER.
 
-## 1. Song Map Rendering
-- [ ] UI shows "Song Map" section.
-- [ ] Sections are rendered as blocks (Buttons).
-- [ ] Each block shows the correct Region name.
-- [ ] The current section has a `> ` prefix.
-- [ ] The automatic next section has a `>> ` prefix.
+## 1. Track Detection & Classification
+- [ ] Rename a track to "CLICK". Confirm it appears in the "Click" category.
+- [ ] Rename a track to "GUIA". Confirm it appears in the "Guide" category.
+- [ ] Rename a track to "BATERIA". Confirm it appears in the "Drums" category.
+- [ ] Confirm all stem categories (Bass, Keys, etc.) work as expected based on names.
 
-## 2. Manual Selection
-- [ ] Click on any non-current block.
-- [ ] The clicked block gets a `* ` prefix.
-- [ ] Operator Panel shows "Selected Target: [name]".
-- [ ] Operator Panel shows "Active Target: [name]" matching your selection.
-- [ ] "Confirmation" status is "NOT CONFIRMED".
+## 2. Mixer Rendering
+- [ ] UI shows "Mixer / Stems" section.
+- [ ] Summary line shows correct counts for total/stems/click/guide.
+- [ ] "Hide Mixer" hides the section. "Show Mixer" shows it.
+- [ ] Categories are collapsible.
 
-## 3. Workflow with Selection
-- [ ] Select a section.
-- [ ] Click "Confirm Intent".
-- [ ] "Confirmation" status changes to "CONFIRMED".
-- [ ] Click "Arm".
-- [ ] Click "Jump/Seek Now".
-- [ ] REAPER jumps to the selected section.
-- [ ] Confirmation and Arming are reset.
+## 3. Mixer Controls
+- [ ] Click "MUTE" on a track. Confirm the track in REAPER is muted.
+- [ ] Click "UNMUTE" on a track. Confirm it is unmuted.
+- [ ] Click "SOLO" on a track. Confirm it is soloed in REAPER.
+- [ ] Click "UNSOLO" on a track. Confirm it is un-soloed.
+- [ ] Click "V-" on a track. Confirm volume decreases in REAPER.
+- [ ] Click "V+" on a track. Confirm volume increases.
 
-## 4. Clear Selection
-- [ ] Select a section.
-- [ ] Click "Clear".
-- [ ] `* ` prefix disappears from the block.
-- [ ] "Selected Target" becomes "none".
-- [ ] "Active Target" reverts to the automatic next section.
+## 4. Operational Persistence
+- [ ] Last Mixer Action shows details of the last click (action, track, value).
+- [ ] Song Map and Transport buttons still work while the mixer is visible.
 
-## 5. Playback States
-- [ ] Start Playback: UI shows "PLAYBACK: PLAYING".
-- [ ] Pause Playback: UI shows "PLAYBACK: PAUSED".
-- [ ] Stop Playback: UI shows "PLAYBACK: STOPPED".
-
-## 6. Safety Audits
-- [ ] Selecting a section does NOT move the cursor or start playback.
-- [ ] Confirming does NOT move the cursor or start playback.
-- [ ] Arming does NOT move the cursor or start playback.
+## 5. Safety Audits
+- [ ] Changing mixer levels does NOT move the cursor or start playback.
+- [ ] Mixer actions do NOT require "Arm" (as designed for live speed).
+- [ ] No tracks are created, deleted, or reordered.
 - [ ] No markers or regions are created or deleted.
 - [ ] `Main_OnCommand` is not triggered.
