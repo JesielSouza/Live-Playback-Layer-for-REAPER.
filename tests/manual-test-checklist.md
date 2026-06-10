@@ -12,6 +12,11 @@
 [ ] Confirmar que nenhum transporte (play/stop/loop) foi acionado na DAW.
 [ ] Confirmar visualmente que o projeto (Tracks, Regions) não foi adulterado/modificado pelo script.
 
+## VS Real Dry Run Read-Only
+[ ] Executar a checklist detalhada em `tests/vs-real-dry-run-checklist.md`.
+[ ] Confirmar que a UI ReaImGui permanece read-only durante o ensaio.
+[ ] Confirmar que nenhum transporte, seek, Play/Stop ou mutação de projeto é acionado pelo produto.
+
 ## Testes de Fim-a-Fim
 
 Antes de considerar o MVP pronto para uso em palco, os seguintes cenários devem ser testados manualmente no REAPER. Todos os itens devem passar.

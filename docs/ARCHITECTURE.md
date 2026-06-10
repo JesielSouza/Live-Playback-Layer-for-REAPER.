@@ -45,6 +45,7 @@ A arquitetura do **Live Playback Layer for REAPER** é dividida em camadas, de m
 * **Saídas:** Cliques e ações do usuário.
 * **Riscos:** Queda de framerate.
 * **Critérios de Aceite:** Renderização a 30fps+ consistente, sem travar o processamento de áudio; feedback visual imediato.
+* **Nota Atual:** A UI ReaImGui implementada nesta fase é estritamente read-only. O teste em VS real é um dry run operacional: nenhuma função de playback, transporte, seek ou mutação de projeto foi implementada ainda.
 
 ### 7. Setlist Persistence Layer
 * **Responsabilidade:** Carregar e salvar as playlists de músicas.

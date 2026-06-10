@@ -33,6 +33,9 @@ lua tests/run_tests.lua
 ```
 Nota: O adapter que realiza as chamadas de API nativas para interagir com o REAPER (`scripts/project.lua`) possui fallbacks seguros em modo offline para garantir que não ocorram crashes e que a validação lógica seja confiável, mockando a tabela global `_G.reaper` nos testes.
 
+## VS Real Dry Run
+Para validar a UI read-only em um Virtual Soundcheck ou ensaio real, use a checklist operacional em [`tests/vs-real-dry-run-checklist.md`](tests/vs-real-dry-run-checklist.md). Esta fase é apenas dry run: a UI observa o runtime e não aciona transporte nem altera o projeto.
+
 ## Instalação Futura
 No futuro, a instalação se dará copiando os scripts para a pasta de `Scripts` do REAPER e importando a action principal que chamará o script `main.lua`, montando a UI sobre a instância aberta do projeto ou configurando ações de atalho.
 
