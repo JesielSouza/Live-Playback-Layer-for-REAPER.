@@ -100,3 +100,6 @@ The safety dashboard summarizes the current read-only guarantees for the UI. It 
 
 ## Locked Transport Adapter Note
 The transport adapter defines the future real execution interface, but this implementation is locked. It reports disabled capabilities and returns blocked execution results only.
+
+## Real Transport Adapter Status Note
+The UI exposes transport adapter capabilities as read-only status. It does not call execution functions and does not add operational controls.

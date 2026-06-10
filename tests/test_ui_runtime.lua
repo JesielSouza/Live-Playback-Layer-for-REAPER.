@@ -188,6 +188,34 @@ local function run_ui_runtime_tests()
     assert(safety[8] == "Guarantees:", "Test 47 failed")
     print("Test 47 passed: get_safety_dashboard_lines returns Guarantees")
 
+    assert(type(view_model.adapter_capabilities) == "table", "Test 48 failed")
+    print("Test 48 passed: build_view_model exposes adapter_capabilities")
+
+    assert(view_model.adapter_capabilities.real_transport_supported == false, "Test 49 failed")
+    print("Test 49 passed: adapter_capabilities real_transport_supported=false")
+
+    assert(view_model.adapter_capabilities.real_transport_enabled == false, "Test 50 failed")
+    print("Test 50 passed: adapter_capabilities real_transport_enabled=false")
+
+    assert(view_model.adapter_capabilities.can_play_stop == false, "Test 51 failed")
+    print("Test 51 passed: adapter_capabilities can_play_stop=false")
+
+    assert(view_model.adapter_capabilities.can_seek == false, "Test 52 failed")
+    print("Test 52 passed: adapter_capabilities can_seek=false")
+
+    assert(view_model.adapter_capabilities.can_mutate_project == false, "Test 53 failed")
+    print("Test 53 passed: adapter_capabilities can_mutate_project=false")
+
+    local adapter = ui_runtime.get_transport_adapter_lines(view_model)
+    assert(adapter[1] == "Backend: reaper", "Test 54 failed")
+    print("Test 54 passed: get_transport_adapter_lines returns Backend")
+
+    assert(adapter[7] == "Reason: real_transport_locked", "Test 55 failed")
+    print("Test 55 passed: get_transport_adapter_lines returns Reason")
+
+    assert(adapter[3] == "Real Transport Enabled: false", "Test 56 failed")
+    print("Test 56 passed: get_transport_adapter_lines returns Real Transport Enabled")
+
     print("\nUI runtime tests passed successfully!")
 end
 

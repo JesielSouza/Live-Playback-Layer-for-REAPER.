@@ -5,6 +5,7 @@
 
 local UIRuntime = {}
 local TransportControl = require("scripts.transport_control")
+local TransportAdapter = require("scripts.transport_adapter")
 local TransportGate = require("scripts.transport_gate")
 local TransportPreflight = require("scripts.transport_preflight")
 local SafetyDashboard = require("scripts.safety_dashboard")
@@ -79,6 +80,8 @@ local function apply_labels(view_model)
 end
 
 function UIRuntime.build_view_model(snapshot, ui_session)
+    local adapter_capabilities = TransportAdapter.get_capabilities({})
+
     if type(snapshot) ~= "table" then
         local session_state = UISession.get_state(ui_session)
         local transport_gate_result = TransportGate.evaluate(nil, nil)
@@ -131,6 +134,7 @@ function UIRuntime.build_view_model(snapshot, ui_session)
             simulation_result = simulation_result,
             preflight_report = preflight_report,
             safety_dashboard = safety_dashboard,
+            adapter_capabilities = adapter_capabilities,
             warnings = {},
             errors = { "missing_snapshot" }
         }
@@ -196,6 +200,7 @@ function UIRuntime.build_view_model(snapshot, ui_session)
         simulation_result = simulation_result,
         preflight_report = preflight_report,
         safety_dashboard = safety_dashboard,
+        adapter_capabilities = adapter_capabilities,
         warnings = copy_list(snapshot.warnings),
         errors = copy_list(snapshot.errors)
     }
@@ -334,6 +339,21 @@ function UIRuntime.get_safety_dashboard_lines(view_model)
     end
 
     return lines
+end
+
+function UIRuntime.get_transport_adapter_lines(view_model)
+    view_model = view_model or {}
+    local capabilities = view_model.adapter_capabilities or {}
+
+    return {
+        "Backend: " .. text_or_nil(capabilities.backend),
+        "Real Transport Supported: " .. bool_label(capabilities.real_transport_supported == true),
+        "Real Transport Enabled: " .. bool_label(capabilities.real_transport_enabled == true),
+        "Can Play Stop: " .. bool_label(capabilities.can_play_stop == true),
+        "Can Seek: " .. bool_label(capabilities.can_seek == true),
+        "Can Mutate Project: " .. bool_label(capabilities.can_mutate_project == true),
+        "Reason: " .. text_or_nil(capabilities.reason)
+    }
 end
 
 return UIRuntime

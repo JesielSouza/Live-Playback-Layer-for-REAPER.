@@ -94,3 +94,6 @@ O dashboard de seguranca (`scripts/safety_dashboard.lua`) consolida garantias re
 
 ## Locked Transport Adapter
 O adapter de transporte (`scripts/transport_adapter.lua`) prepara a interface futura de execucao real, mas permanece travado por configuracao. Todas as capacidades reais retornam `false`, `execute_real` nunca executa e o motivo padrao e `real_transport_locked`.
+
+## Real Transport Adapter Status
+A UI exibe as capacidades do adapter real de forma read-only. O bloco mostra backend `reaper`, suporte real desabilitado e todas as capacidades operacionais como `false`.

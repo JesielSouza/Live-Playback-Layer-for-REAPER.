@@ -79,3 +79,15 @@ Antes de considerar o MVP pronto para uso em palco, os seguintes cenários devem
 [ ] Confirmar que capacidades reais retornam `false`.
 [ ] Confirmar que qualquer tentativa de execucao real retorna `real_transport_locked` ou outro bloqueio de validacao.
 [ ] Confirmar que nada tocou, nada moveu e nada alterou o projeto.
+
+## Real Transport Adapter Status
+[ ] Confirmar a secao `Real Transport Adapter`.
+[ ] Confirmar `Backend: reaper`.
+[ ] Confirmar `Real Transport Supported: false`.
+[ ] Confirmar `Real Transport Enabled: false`.
+[ ] Confirmar `Can Play Stop: false`.
+[ ] Confirmar `Can Seek: false`.
+[ ] Confirmar `Can Mutate Project: false`.
+[ ] Confirmar `Reason: real_transport_locked`.
+[ ] Confirmar que nenhum botao operacional novo apareceu.
+[ ] Confirmar que nada tocou, nada moveu e nada alterou o projeto.
