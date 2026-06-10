@@ -60,6 +60,7 @@ local Runtime = require("scripts.runtime")
 local UIRuntime = require("scripts.ui_runtime")
 
 local ctx = ImGui.CreateContext("Live Playback Layer")
+local frame_count = 0
 
 local function value_or_nil(value)
     if value == nil then
@@ -73,7 +74,17 @@ local function render_line(label, value)
     ImGui.Text(ctx, label .. ": " .. value_or_nil(value))
 end
 
+local function render_separator()
+    if ImGui.Separator then
+        ImGui.Separator(ctx)
+    else
+        ImGui.Text(ctx, "----------------")
+    end
+end
+
 local function loop()
+    frame_count = frame_count + 1
+
     local snapshot_ok, snapshot = pcall(function()
         return Runtime.build_snapshot()
     end)
@@ -87,19 +98,30 @@ local function loop()
         ImGui.Text(ctx, "Live Playback Layer")
 
         if snapshot_ok and view_model then
+            render_separator()
+            ImGui.Text(ctx, "Status")
             ImGui.Text(ctx, value_or_nil(view_model.status_line))
-            ImGui.Text(ctx, "")
-            render_line("Read Only", view_model.read_only)
+            render_line("Read Only", view_model.read_only_label)
             render_line("App State", view_model.app_state)
-            render_line("Validation Status", view_model.validation_status)
-            render_line("Current Position", view_model.current_position and (tostring(view_model.current_position) .. "s") or nil)
+            render_line("Validation Status", view_model.validation_label)
+
+            render_separator()
+            ImGui.Text(ctx, "Position")
+            render_line("Current Position", view_model.current_position_label)
             render_line("Current Section", view_model.current_section)
+
+            render_separator()
+            ImGui.Text(ctx, "Navigation")
             render_line("Previous Section", view_model.previous_section)
             render_line("Next Section", view_model.next_section)
             render_line("Decision", view_model.decision)
+
+            render_separator()
+            ImGui.Text(ctx, "Diagnostics")
             render_line("Section Count", view_model.section_count)
             render_line("Logger Event Count", view_model.logger_event_count)
-            ImGui.Text(ctx, "")
+            render_line("Frame Count", frame_count)
+            render_line("Diagnostics", view_model.diagnostics_label)
             ImGui.Text(ctx, "No transport actions are triggered.")
         else
             ImGui.Text(ctx, "Runtime snapshot failed.")

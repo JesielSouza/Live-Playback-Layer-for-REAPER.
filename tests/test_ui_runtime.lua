@@ -74,6 +74,34 @@ local function run_ui_runtime_tests()
     assert(string.find(status_line, "NEXT_SECTION_READY"), "Test 15 failed")
     print("Test 15 passed: format_status_line contains decision")
 
+    assert(view_model.current_position_label == "12.00s", "Test 16 failed")
+    print("Test 16 passed: current_position_label formats numbers with two decimals")
+
+    local nil_position = build_snapshot()
+    nil_position.position = nil
+    local nil_position_view = ui_runtime.build_view_model(nil_position)
+    assert(nil_position_view.current_position_label == "nil", "Test 17 failed")
+    print("Test 17 passed: current_position_label formats nil as nil")
+
+    assert(view_model.read_only_label == "true", "Test 18 failed")
+    print("Test 18 passed: read_only_label returns true")
+
+    assert(string.find(view_model.validation_label, "ready"), "Test 19 failed")
+    print("Test 19 passed: validation_label includes status")
+
+    assert(string.find(view_model.diagnostics_label, "events=6"), "Test 20 failed")
+    print("Test 20 passed: diagnostics_label includes logger_event_count")
+
+    local partial_view = ui_runtime.build_view_model({ ok = false })
+    assert(partial_view.ok == false, "Test 21 failed")
+    assert(partial_view.status_line ~= nil, "Test 21 failed")
+    print("Test 21 passed: build_view_model handles partial snapshots")
+
+    local nil_status_line = ui_runtime.format_status_line({})
+    assert(type(nil_status_line) == "string", "Test 22 failed")
+    assert(string.find(nil_status_line, "nil"), "Test 22 failed")
+    print("Test 22 passed: status_line handles nil fields")
+
     print("\nUI runtime tests passed successfully!")
 end
 
