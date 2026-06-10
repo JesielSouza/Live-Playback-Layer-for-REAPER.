@@ -103,3 +103,6 @@ O plano de seek (`scripts/seek_plan.lua`) resolve uma posicao alvo futura a part
 
 ## Seek Plan UI
 A UI exibe o plano de seek atual de forma read-only. O bloco mostra action, section atual, section alvo, posicao alvo, estado locked e motivo sem acionar qualquer execucao.
+
+## Real Transport Readiness
+O checklist de readiness (`scripts/transport_readiness.lua`) consolida criterios obrigatorios antes de qualquer liberacao futura de transporte real. O relatorio e read-only e atualmente permanece blocked/review porque adapter, gate e plano seguem travados.

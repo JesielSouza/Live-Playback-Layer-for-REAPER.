@@ -109,3 +109,6 @@ The seek plan module builds read-only future movement plans from transport inten
 
 ## Seek Plan UI Note
 The UI exposes the current seek plan as read-only status. It displays the planned target without invoking real execution or changing playback state.
+
+## Real Transport Readiness Note
+The readiness checklist summarizes the required gates before any future real transport enablement. It remains read-only and reports blockers while the adapter, gate, and seek plan stay locked.

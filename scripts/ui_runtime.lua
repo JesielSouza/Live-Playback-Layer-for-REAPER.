@@ -8,6 +8,7 @@ local TransportControl = require("scripts.transport_control")
 local TransportAdapter = require("scripts.transport_adapter")
 local TransportGate = require("scripts.transport_gate")
 local TransportPreflight = require("scripts.transport_preflight")
+local TransportReadiness = require("scripts.transport_readiness")
 local SafetyDashboard = require("scripts.safety_dashboard")
 local UISession = require("scripts.ui_session")
 
@@ -102,6 +103,14 @@ function UIRuntime.build_view_model(snapshot, ui_session)
             session_state
         )
         local seek_plan = TransportControl.build_seek_plan(nil, nil, {})
+        local transport_readiness = TransportReadiness.build({
+            adapter_capabilities = adapter_capabilities,
+            gate_result = transport_gate_result,
+            preflight_report = preflight_report,
+            safety_dashboard = safety_dashboard,
+            seek_plan = seek_plan,
+            ui_session_state = session_state
+        })
         local view_model = {
             ok = false,
             read_only = true,
@@ -137,6 +146,7 @@ function UIRuntime.build_view_model(snapshot, ui_session)
             safety_dashboard = safety_dashboard,
             adapter_capabilities = adapter_capabilities,
             seek_plan = seek_plan,
+            transport_readiness = transport_readiness,
             warnings = {},
             errors = { "missing_snapshot" }
         }
@@ -170,6 +180,14 @@ function UIRuntime.build_view_model(snapshot, ui_session)
         session_state
     )
     local seek_plan = TransportControl.build_seek_plan(transport_intent, snapshot, {})
+    local transport_readiness = TransportReadiness.build({
+        adapter_capabilities = adapter_capabilities,
+        gate_result = transport_gate_result,
+        preflight_report = preflight_report,
+        safety_dashboard = safety_dashboard,
+        seek_plan = seek_plan,
+        ui_session_state = session_state
+    })
     local view_model = {
         ok = snapshot.ok == true,
         read_only = true,
@@ -205,6 +223,7 @@ function UIRuntime.build_view_model(snapshot, ui_session)
         safety_dashboard = safety_dashboard,
         adapter_capabilities = adapter_capabilities,
         seek_plan = seek_plan,
+        transport_readiness = transport_readiness,
         warnings = copy_list(snapshot.warnings),
         errors = copy_list(snapshot.errors)
     }
@@ -373,6 +392,34 @@ function UIRuntime.get_seek_plan_lines(view_model)
         "Locked: " .. bool_label(plan.locked == true),
         "Reason: " .. text_or_nil(plan.reason)
     }
+end
+
+function UIRuntime.get_transport_readiness_lines(view_model)
+    view_model = view_model or {}
+    local report = view_model.transport_readiness or {}
+    local checks = report.checks or {}
+    local blockers = report.blockers or {}
+    local lines = {
+        "Status: " .. text_or_nil(report.status),
+        "Ready: " .. bool_label(report.ready == true),
+        "Summary: " .. text_or_nil(report.summary),
+        "Checks:",
+        "- adapter_supported: " .. bool_label(checks.adapter_supported == true),
+        "- adapter_enabled: " .. bool_label(checks.adapter_enabled == true),
+        "- gate_executable: " .. bool_label(checks.gate_executable == true),
+        "- preflight_simulated: " .. bool_label(checks.preflight_simulated == true),
+        "- safety_not_blocked: " .. bool_label(checks.safety_not_blocked == true),
+        "- seek_plan_ok: " .. bool_label(checks.seek_plan_ok == true),
+        "- seek_plan_unlocked: " .. bool_label(checks.seek_plan_unlocked == true),
+        "- manual_confirmed: " .. bool_label(checks.manual_confirmed == true),
+        "Blockers:"
+    }
+
+    for _, blocker in ipairs(blockers) do
+        table.insert(lines, "- " .. tostring(blocker))
+    end
+
+    return lines
 end
 
 return UIRuntime

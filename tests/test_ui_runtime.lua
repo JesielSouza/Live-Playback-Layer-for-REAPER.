@@ -246,6 +246,19 @@ local function run_ui_runtime_tests()
     assert(seek[7] == "Reason: seek_plan_locked", "Test 63 failed")
     print("Test 63 passed: get_seek_plan_lines returns Reason")
 
+    assert(type(view_model.transport_readiness) == "table", "Test 64 failed")
+    print("Test 64 passed: build_view_model exposes transport_readiness")
+
+    local readiness = ui_runtime.get_transport_readiness_lines(view_model)
+    assert(readiness[1] == "Status: blocked", "Test 65 failed")
+    print("Test 65 passed: get_transport_readiness_lines returns Status")
+
+    assert(readiness[2] == "Ready: false", "Test 66 failed")
+    print("Test 66 passed: get_transport_readiness_lines returns Ready")
+
+    assert(readiness[13] == "Blockers:", "Test 67 failed")
+    print("Test 67 passed: get_transport_readiness_lines returns Blockers")
+
     print("\nUI runtime tests passed successfully!")
 end
 

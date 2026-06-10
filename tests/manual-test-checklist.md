@@ -109,3 +109,19 @@ Antes de considerar o MVP pronto para uso em palco, os seguintes cenários devem
 [ ] Confirmar `Reason: seek_plan_locked` ou bloqueio esperado.
 [ ] Confirmar que nenhum botao operacional novo apareceu.
 [ ] Confirmar que nada tocou, nada moveu e nada alterou o projeto.
+
+## Real Transport Readiness
+[ ] Confirmar a secao `Real Transport Readiness`.
+[ ] Antes de confirmar, validar `Status: blocked`.
+[ ] Antes de confirmar, validar `Ready: false`.
+[ ] Antes de confirmar, validar `Summary: readiness_blocked`.
+[ ] Confirmar `manual_confirmed: false`.
+[ ] Confirmar `adapter_supported: false`.
+[ ] Confirmar `adapter_enabled: false`.
+[ ] Confirmar `gate_executable: false`.
+[ ] Confirmar `seek_plan_ok: true`.
+[ ] Confirmar `seek_plan_unlocked: false`.
+[ ] Apos `Confirm Intent (dry-run)`, validar `Status: review`.
+[ ] Apos confirmar, validar `Summary: readiness_review`.
+[ ] Confirmar que nenhum botao operacional novo apareceu.
+[ ] Confirmar que nada tocou, nada moveu e nada alterou o projeto.
