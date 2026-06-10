@@ -124,11 +124,36 @@ function UIRuntime.get_section_cards(view_model)
     view_model = view_model or {}
 
     return {
-        { label = "Current", value = text_or_nil(view_model.current_section) },
-        { label = "Previous", value = text_or_nil(view_model.previous_section) },
-        { label = "Next", value = text_or_nil(view_model.next_section) },
-        { label = "Decision", value = text_or_nil(view_model.decision) }
+        { label = "Current Section", value = text_or_nil(view_model.current_section), emphasis = true },
+        { label = "Previous Section", value = text_or_nil(view_model.previous_section) },
+        { label = "Next Section", value = text_or_nil(view_model.next_section), emphasis = true },
+        { label = "Decision", value = text_or_nil(view_model.decision), emphasis = true },
+        { label = "App State", value = text_or_nil(view_model.app_state) },
+        { label = "Validation", value = text_or_nil(view_model.validation_label) },
+        { label = "Position", value = text_or_nil(view_model.current_position_label), emphasis = true },
+        { label = "Read Only", value = text_or_nil(view_model.read_only_label) }
     }
+end
+
+function UIRuntime.get_diagnostics_lines(view_model)
+    view_model = view_model or {}
+
+    local lines = {
+        "Section Count: " .. tostring(view_model.section_count or 0),
+        "Logger Event Count: " .. tostring(view_model.logger_event_count or 0)
+    }
+
+    if view_model.frame_count ~= nil then
+        table.insert(lines, "Frame Count: " .. tostring(view_model.frame_count))
+    end
+
+    table.insert(lines, "Diagnostics: " .. text_or_nil(view_model.diagnostics_label))
+
+    return lines
+end
+
+function UIRuntime.get_read_only_warning()
+    return "No transport actions are triggered."
 end
 
 return UIRuntime

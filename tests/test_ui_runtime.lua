@@ -52,14 +52,14 @@ local function run_ui_runtime_tests()
     print("Test 8 passed: build_view_model with nil returns ok=false")
 
     local cards = ui_runtime.get_section_cards(view_model)
-    assert(cards[1].label == "Current", "Test 9 failed")
-    print("Test 9 passed: get_section_cards returns Current")
+    assert(cards[1].label == "Current Section", "Test 9 failed")
+    print("Test 9 passed: get_section_cards returns Current Section")
 
-    assert(cards[2].label == "Previous", "Test 10 failed")
-    print("Test 10 passed: get_section_cards returns Previous")
+    assert(cards[2].label == "Previous Section", "Test 10 failed")
+    print("Test 10 passed: get_section_cards returns Previous Section")
 
-    assert(cards[3].label == "Next", "Test 11 failed")
-    print("Test 11 passed: get_section_cards returns Next")
+    assert(cards[3].label == "Next Section", "Test 11 failed")
+    print("Test 11 passed: get_section_cards returns Next Section")
 
     assert(cards[4].label == "Decision", "Test 12 failed")
     print("Test 12 passed: get_section_cards returns Decision")
@@ -101,6 +101,21 @@ local function run_ui_runtime_tests()
     assert(type(nil_status_line) == "string", "Test 22 failed")
     assert(string.find(nil_status_line, "nil"), "Test 22 failed")
     print("Test 22 passed: status_line handles nil fields")
+
+    assert(cards[1].emphasis == true, "Test 23 failed")
+    assert(cards[3].emphasis == true, "Test 23 failed")
+    assert(cards[4].emphasis == true, "Test 23 failed")
+    print("Test 23 passed: key cards have emphasis=true")
+
+    local diagnostics = ui_runtime.get_diagnostics_lines(view_model)
+    assert(diagnostics[1] == "Section Count: 4", "Test 24 failed")
+    print("Test 24 passed: get_diagnostics_lines returns Section Count")
+
+    assert(diagnostics[2] == "Logger Event Count: 6", "Test 25 failed")
+    print("Test 25 passed: get_diagnostics_lines returns Logger Event Count")
+
+    assert(ui_runtime.get_read_only_warning() == "No transport actions are triggered.", "Test 26 failed")
+    print("Test 26 passed: get_read_only_warning returns read-only warning")
 
     print("\nUI runtime tests passed successfully!")
 end

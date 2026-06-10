@@ -74,6 +74,11 @@ local function render_line(label, value)
     ImGui.Text(ctx, label .. ": " .. value_or_nil(value))
 end
 
+local function render_card(card)
+    local prefix = card.emphasis and ">> " or ""
+    ImGui.Text(ctx, prefix .. card.label .. ": " .. value_or_nil(card.value))
+end
+
 local function render_separator()
     if ImGui.Separator then
         ImGui.Separator(ctx)
@@ -92,6 +97,7 @@ local function loop()
     local view_model = nil
     if snapshot_ok then
         view_model = UIRuntime.build_view_model(snapshot)
+        view_model.frame_count = frame_count
     end
 
     if ImGui.Begin(ctx, "Live Playback Layer") then
@@ -107,22 +113,22 @@ local function loop()
 
             render_separator()
             ImGui.Text(ctx, "Position")
-            render_line("Current Position", view_model.current_position_label)
-            render_line("Current Section", view_model.current_section)
+            local cards = UIRuntime.get_section_cards(view_model)
+            render_card(cards[7])
+            render_card(cards[1])
 
             render_separator()
             ImGui.Text(ctx, "Navigation")
-            render_line("Previous Section", view_model.previous_section)
-            render_line("Next Section", view_model.next_section)
-            render_line("Decision", view_model.decision)
+            render_card(cards[2])
+            render_card(cards[3])
+            render_card(cards[4])
 
             render_separator()
             ImGui.Text(ctx, "Diagnostics")
-            render_line("Section Count", view_model.section_count)
-            render_line("Logger Event Count", view_model.logger_event_count)
-            render_line("Frame Count", frame_count)
-            render_line("Diagnostics", view_model.diagnostics_label)
-            ImGui.Text(ctx, "No transport actions are triggered.")
+            for _, line in ipairs(UIRuntime.get_diagnostics_lines(view_model)) do
+                ImGui.Text(ctx, line)
+            end
+            ImGui.Text(ctx, UIRuntime.get_read_only_warning())
         else
             ImGui.Text(ctx, "Runtime snapshot failed.")
             ImGui.Text(ctx, value_or_nil(snapshot))
