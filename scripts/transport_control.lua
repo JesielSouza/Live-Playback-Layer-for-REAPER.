@@ -5,6 +5,7 @@
 --]]
 
 local TransportControl = {}
+local TransportGate = require("scripts.transport_gate")
 
 local VALID_ACTIONS = {
     go_next = true,
@@ -104,8 +105,13 @@ function TransportControl.format_intent(intent)
     }, "\n")
 end
 
-function TransportControl.can_execute(intent)
-    return false, "transport_execution_not_enabled"
+function TransportControl.can_execute(intent, runtime_snapshot, options)
+    local gate_result = TransportGate.evaluate(intent, runtime_snapshot, options)
+    if runtime_snapshot == nil then
+        return false, "transport_execution_not_enabled", gate_result
+    end
+
+    return false, gate_result.reason, gate_result
 end
 
 function TransportControl.execute_intent(intent, options)

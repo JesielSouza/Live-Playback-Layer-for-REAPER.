@@ -5,6 +5,7 @@
 
 local UIRuntime = {}
 local TransportControl = require("scripts.transport_control")
+local TransportGate = require("scripts.transport_gate")
 
 local function text_or_nil(value)
     if value == nil then
@@ -101,6 +102,7 @@ function UIRuntime.build_view_model(snapshot)
             transport_confirmation_label = "Manual Confirmation",
             transport_execution_enabled = false,
             transport_confirmation_required = true,
+            transport_gate_result = TransportGate.evaluate(nil, nil),
             warnings = {},
             errors = { "missing_snapshot" }
         }
@@ -109,6 +111,12 @@ function UIRuntime.build_view_model(snapshot)
     end
 
     local transport_intent = TransportControl.build_intent("go_next", snapshot, { dry_run = true })
+    local transport_gate_result = TransportGate.evaluate(transport_intent, snapshot, {
+        enable_transport = false,
+        require_manual_confirmation = true,
+        manual_confirmed = false,
+        allow_project_mutation = false
+    })
     local view_model = {
         ok = snapshot.ok == true,
         read_only = true,
@@ -134,6 +142,7 @@ function UIRuntime.build_view_model(snapshot)
         transport_confirmation_label = "Manual Confirmation",
         transport_execution_enabled = false,
         transport_confirmation_required = true,
+        transport_gate_result = transport_gate_result,
         warnings = copy_list(snapshot.warnings),
         errors = copy_list(snapshot.errors)
     }
@@ -201,6 +210,21 @@ function UIRuntime.get_transport_confirmation_lines(view_model)
         "Mode: DRY RUN",
         "Execution: DISABLED",
         "Confirmation: visual only"
+    }
+end
+
+function UIRuntime.get_transport_gate_lines(view_model)
+    view_model = view_model or {}
+    local gate_result = view_model.transport_gate_result or {}
+    local checks = gate_result.checks or {}
+
+    return {
+        "Executable: " .. bool_label(gate_result.executable == true),
+        "Blocked: " .. bool_label(gate_result.blocked == true),
+        "Reason: " .. text_or_nil(gate_result.reason),
+        "Transport Enabled: " .. bool_label(checks.transport_enabled == true),
+        "Manual Confirmation: " .. bool_label(checks.manual_confirmation_ok == true),
+        "Mutation Allowed: " .. bool_label(checks.project_mutation_allowed == true)
     }
 end
 
