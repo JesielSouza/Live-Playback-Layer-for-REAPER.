@@ -62,3 +62,14 @@ Antes de considerar o MVP pronto para uso em palco, os seguintes cenários devem
 [ ] Apos clicar `Confirm Intent (dry-run)`, confirmar `Manual Confirmed: true`.
 [ ] Confirmar que `Gate Executable` continua `false`.
 [ ] Confirmar que nada tocou, nada moveu e nada alterou o projeto.
+
+## Operational Safety Dashboard
+[ ] Confirmar a secao `Operational Safety Dashboard`.
+[ ] Antes de confirmar, validar `Safety Level: locked`.
+[ ] Antes de confirmar, validar `Transport Real Enabled: false`.
+[ ] Antes de confirmar, validar `Execution Blocked: true`.
+[ ] Antes de confirmar, validar `Manual Confirmation Active: false`.
+[ ] Apos clicar `Confirm Intent (dry-run)`, validar `Safety Level: review`.
+[ ] Apos confirmar, validar `Manual Confirmation Active: true`.
+[ ] Confirmar as garantias `transport_real_disabled`, `no_play_stop_calls`, `no_main_on_command`, `no_cursor_move`, `no_seek` e `no_project_mutation`.
+[ ] Confirmar que nada tocou, nada moveu e nada alterou o projeto.

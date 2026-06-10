@@ -7,6 +7,7 @@ local UIRuntime = {}
 local TransportControl = require("scripts.transport_control")
 local TransportGate = require("scripts.transport_gate")
 local TransportPreflight = require("scripts.transport_preflight")
+local SafetyDashboard = require("scripts.safety_dashboard")
 local UISession = require("scripts.ui_session")
 
 local function text_or_nil(value)
@@ -80,6 +81,23 @@ end
 function UIRuntime.build_view_model(snapshot, ui_session)
     if type(snapshot) ~= "table" then
         local session_state = UISession.get_state(ui_session)
+        local transport_gate_result = TransportGate.evaluate(nil, nil)
+        local simulation_result = TransportControl.simulate_intent(nil, nil, {
+            enabled = false,
+            manual_confirmed = false
+        })
+        local preflight_report = TransportPreflight.build_report(
+            nil,
+            transport_gate_result,
+            simulation_result,
+            session_state
+        )
+        local safety_dashboard = SafetyDashboard.build(
+            preflight_report,
+            transport_gate_result,
+            simulation_result,
+            session_state
+        )
         local view_model = {
             ok = false,
             read_only = true,
@@ -109,20 +127,10 @@ function UIRuntime.build_view_model(snapshot, ui_session)
             confirmed_action = session_state.confirmed_action,
             confirmed_target_section = session_state.confirmed_target_section,
             confirmation_count = session_state.confirmation_count,
-            transport_gate_result = TransportGate.evaluate(nil, nil),
-            simulation_result = TransportControl.simulate_intent(nil, nil, {
-                enabled = false,
-                manual_confirmed = false
-            }),
-            preflight_report = TransportPreflight.build_report(
-                nil,
-                TransportGate.evaluate(nil, nil),
-                TransportControl.simulate_intent(nil, nil, {
-                    enabled = false,
-                    manual_confirmed = false
-                }),
-                session_state
-            ),
+            transport_gate_result = transport_gate_result,
+            simulation_result = simulation_result,
+            preflight_report = preflight_report,
+            safety_dashboard = safety_dashboard,
             warnings = {},
             errors = { "missing_snapshot" }
         }
@@ -145,6 +153,12 @@ function UIRuntime.build_view_model(snapshot, ui_session)
     })
     local preflight_report = TransportPreflight.build_report(
         transport_intent,
+        transport_gate_result,
+        simulation_result,
+        session_state
+    )
+    local safety_dashboard = SafetyDashboard.build(
+        preflight_report,
         transport_gate_result,
         simulation_result,
         session_state
@@ -181,6 +195,7 @@ function UIRuntime.build_view_model(snapshot, ui_session)
         transport_gate_result = transport_gate_result,
         simulation_result = simulation_result,
         preflight_report = preflight_report,
+        safety_dashboard = safety_dashboard,
         warnings = copy_list(snapshot.warnings),
         errors = copy_list(snapshot.errors)
     }
@@ -298,6 +313,27 @@ function UIRuntime.get_transport_preflight_lines(view_model)
         "Simulation Message: " .. text_or_nil(report.simulation_message),
         "Summary: " .. text_or_nil(report.summary)
     }
+end
+
+function UIRuntime.get_safety_dashboard_lines(view_model)
+    view_model = view_model or {}
+    local dashboard = view_model.safety_dashboard or {}
+    local lines = {
+        "Safety Level: " .. text_or_nil(dashboard.safety_level),
+        "Transport Real Enabled: " .. bool_label(dashboard.transport_real_enabled == true),
+        "Execution Blocked: " .. bool_label(dashboard.execution_blocked ~= false),
+        "Manual Confirmation Active: " .. bool_label(dashboard.manual_confirmation_active == true),
+        "Gate Reason: " .. text_or_nil(dashboard.gate_reason),
+        "Preflight Status: " .. text_or_nil(dashboard.preflight_status),
+        "Simulation Message: " .. text_or_nil(dashboard.simulation_message),
+        "Guarantees:"
+    }
+
+    for _, guarantee in ipairs(dashboard.guarantees or {}) do
+        table.insert(lines, "- " .. tostring(guarantee))
+    end
+
+    return lines
 end
 
 return UIRuntime

@@ -88,3 +88,6 @@ A UI mantem uma confirmacao manual em memoria (`scripts/ui_session.lua`). Os bot
 
 ## Transport Preflight
 O relatorio de preflight (`scripts/transport_preflight.lua`) consolida intent, gate, simulacao e confirmacao manual em memoria. Ele e apenas read-only e informa se a intent esta bloqueada, pronta para simulacao ou simulada, sem executar transporte.
+
+## Operational Safety Dashboard
+O dashboard de seguranca (`scripts/safety_dashboard.lua`) consolida garantias read-only antes de qualquer execucao futura. Ele mantem transporte real desabilitado, execucao bloqueada e lista as garantias operacionais exibidas na UI.

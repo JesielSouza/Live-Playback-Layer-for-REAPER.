@@ -160,6 +160,12 @@ local function loop()
             end
 
             render_separator()
+            ImGui.Text(ctx, "Operational Safety Dashboard")
+            for _, line in ipairs(UIRuntime.get_safety_dashboard_lines(view_model)) do
+                ImGui.Text(ctx, line)
+            end
+
+            render_separator()
             ImGui.Text(ctx, "Diagnostics")
             for _, line in ipairs(UIRuntime.get_diagnostics_lines(view_model)) do
                 ImGui.Text(ctx, line)

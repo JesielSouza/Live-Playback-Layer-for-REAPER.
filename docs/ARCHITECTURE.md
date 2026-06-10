@@ -94,3 +94,6 @@ Manual confirmation is stored in a local UI session only. It can feed the transp
 
 ## Transport Preflight Note
 Transport preflight consolidates intent, gate, simulator, and manual confirmation state into a read-only report. It does not execute transport, move the cursor, seek, or mutate the project.
+
+## Operational Safety Dashboard Note
+The safety dashboard summarizes the current read-only guarantees for the UI. It keeps real transport disabled and execution blocked while surfacing gate, preflight, simulation, and manual confirmation state.

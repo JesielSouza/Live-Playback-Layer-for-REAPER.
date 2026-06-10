@@ -175,6 +175,19 @@ local function run_ui_runtime_tests()
     assert(preflight[9] == "Summary: preflight_blocked", "Test 43 failed")
     print("Test 43 passed: get_transport_preflight_lines returns Summary")
 
+    assert(type(view_model.safety_dashboard) == "table", "Test 44 failed")
+    print("Test 44 passed: build_view_model exposes safety_dashboard")
+
+    local safety = ui_runtime.get_safety_dashboard_lines(view_model)
+    assert(safety[1] == "Safety Level: locked", "Test 45 failed")
+    print("Test 45 passed: get_safety_dashboard_lines returns Safety Level")
+
+    assert(safety[2] == "Transport Real Enabled: false", "Test 46 failed")
+    print("Test 46 passed: get_safety_dashboard_lines returns Transport Real Enabled")
+
+    assert(safety[8] == "Guarantees:", "Test 47 failed")
+    print("Test 47 passed: get_safety_dashboard_lines returns Guarantees")
+
     print("\nUI runtime tests passed successfully!")
 end
 
