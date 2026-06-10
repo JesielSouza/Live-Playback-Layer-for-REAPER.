@@ -98,6 +98,9 @@ function UIRuntime.build_view_model(snapshot)
             diagnostics_label = "sections=0 events=0",
             transport_intent_preview = nil,
             transport_intent_label = "Transport Intent: nil -> nil (dry-run)",
+            transport_confirmation_label = "Manual Confirmation",
+            transport_execution_enabled = false,
+            transport_confirmation_required = true,
             warnings = {},
             errors = { "missing_snapshot" }
         }
@@ -128,6 +131,9 @@ function UIRuntime.build_view_model(snapshot)
         diagnostics_label = "",
         transport_intent_preview = transport_intent,
         transport_intent_label = "",
+        transport_confirmation_label = "Manual Confirmation",
+        transport_execution_enabled = false,
+        transport_confirmation_required = true,
         warnings = copy_list(snapshot.warnings),
         errors = copy_list(snapshot.errors)
     }
@@ -182,6 +188,19 @@ function UIRuntime.get_transport_preview_lines(view_model)
         "Dry Run: " .. bool_label(intent.dry_run ~= false),
         "Executable: " .. bool_label(intent.executable == true),
         "Reason: " .. text_or_nil(intent.reason)
+    }
+end
+
+function UIRuntime.get_transport_confirmation_lines(view_model)
+    view_model = view_model or {}
+    local intent = view_model.transport_intent_preview or {}
+
+    return {
+        "Action: " .. text_or_nil(intent.action),
+        "Target: " .. text_or_nil(intent.target_section),
+        "Mode: DRY RUN",
+        "Execution: DISABLED",
+        "Confirmation: visual only"
     }
 end
 

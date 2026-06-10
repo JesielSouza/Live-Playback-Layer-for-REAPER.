@@ -128,6 +128,10 @@ local function loop()
             for _, line in ipairs(UIRuntime.get_transport_preview_lines(view_model)) do
                 ImGui.Text(ctx, line)
             end
+            ImGui.Text(ctx, value_or_nil(view_model.transport_confirmation_label))
+            for _, line in ipairs(UIRuntime.get_transport_confirmation_lines(view_model)) do
+                ImGui.Text(ctx, line)
+            end
 
             render_separator()
             ImGui.Text(ctx, "Diagnostics")

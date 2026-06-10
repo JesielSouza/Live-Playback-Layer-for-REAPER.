@@ -117,6 +117,28 @@ local function run_ui_runtime_tests()
     assert(ui_runtime.get_read_only_warning() == "No transport actions are triggered.", "Test 26 failed")
     print("Test 26 passed: get_read_only_warning returns read-only warning")
 
+    local confirmation = ui_runtime.get_transport_confirmation_lines(view_model)
+    assert(confirmation[1] == "Action: go_next", "Test 27 failed")
+    print("Test 27 passed: get_transport_confirmation_lines returns Action")
+
+    assert(confirmation[2] == "Target: CHORUS_1", "Test 28 failed")
+    print("Test 28 passed: get_transport_confirmation_lines returns Target")
+
+    assert(confirmation[3] == "Mode: DRY RUN", "Test 29 failed")
+    print("Test 29 passed: get_transport_confirmation_lines returns dry-run mode")
+
+    assert(confirmation[4] == "Execution: DISABLED", "Test 30 failed")
+    print("Test 30 passed: get_transport_confirmation_lines returns disabled execution")
+
+    assert(confirmation[5] == "Confirmation: visual only", "Test 31 failed")
+    print("Test 31 passed: get_transport_confirmation_lines returns visual-only confirmation")
+
+    assert(view_model.transport_execution_enabled == false, "Test 32 failed")
+    print("Test 32 passed: build_view_model sets transport_execution_enabled=false")
+
+    assert(view_model.transport_confirmation_required == true, "Test 33 failed")
+    print("Test 33 passed: build_view_model sets transport_confirmation_required=true")
+
     print("\nUI runtime tests passed successfully!")
 end
 
