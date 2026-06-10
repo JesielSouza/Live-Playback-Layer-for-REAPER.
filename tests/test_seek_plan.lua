@@ -15,10 +15,14 @@ local function build_runtime()
     return {
         ok = true,
         current_section = "VERSE_1",
-        sections = {
-            { key = "CHORUS_1", start = 42 },
-            { name = "BRIDGE", start = 84 },
-            { id = "ENDING", start = 126 }
+        context = {
+            validation = {
+                sections = {
+                    { key = "CHORUS_1", start_pos = 42 },
+                    { name = "BRIDGE", start_time = 84 },
+                    { id = "ENDING", region_start = 126 }
+                }
+            }
         }
     }
 end
@@ -54,22 +58,22 @@ local function run_seek_plan_tests()
 
     local resolved = seek_plan.build(build_intent(), build_runtime())
     assert(resolved.target_position == 42, "Test 6 failed")
-    print("Test 6 passed: target_position resolves from sections")
+    print("Test 6 passed: target_position resolves from context validation sections")
 
     assert(resolved.target_position == 42, "Test 7 failed")
-    print("Test 7 passed: sections with key matching target work")
+    print("Test 7 passed: sections with key matching target and start_pos work")
 
     local by_name = build_intent()
     by_name.target_section = "BRIDGE"
     local name_plan = seek_plan.build(by_name, build_runtime())
     assert(name_plan.target_position == 84, "Test 8 failed")
-    print("Test 8 passed: sections with name matching target work")
+    print("Test 8 passed: sections with name matching target and start_time work")
 
     local by_id = build_intent()
     by_id.target_section = "ENDING"
     local id_plan = seek_plan.build(by_id, build_runtime())
     assert(id_plan.target_position == 126, "Test 9 failed")
-    print("Test 9 passed: sections with id matching target work")
+    print("Test 9 passed: sections with id matching target and region_start work")
 
     local missing_position_intent = build_intent()
     missing_position_intent.target_section = "MISSING"

@@ -16,6 +16,14 @@ local function build_snapshot()
         decision = "NEXT_SECTION_READY",
         section_count = 4,
         logger_event_count = 6,
+        context = {
+            validation = {
+                sections = {
+                    { name = "CHORUS_1", start_pos = 30 },
+                    { name = "ENDING", start_pos = 50 }
+                }
+            }
+        },
         warnings = {},
         errors = {}
     }
@@ -215,6 +223,28 @@ local function run_ui_runtime_tests()
 
     assert(adapter[3] == "Real Transport Enabled: false", "Test 56 failed")
     print("Test 56 passed: get_transport_adapter_lines returns Real Transport Enabled")
+
+    assert(type(view_model.seek_plan) == "table", "Test 57 failed")
+    print("Test 57 passed: build_view_model exposes seek_plan")
+
+    assert(view_model.seek_plan.locked == true, "Test 58 failed")
+    print("Test 58 passed: seek_plan locked=true when valid")
+
+    local seek = ui_runtime.get_seek_plan_lines(view_model)
+    assert(seek[1] == "Action: go_next", "Test 59 failed")
+    print("Test 59 passed: get_seek_plan_lines returns action")
+
+    assert(seek[3] == "Target Section: CHORUS_1", "Test 60 failed")
+    print("Test 60 passed: get_seek_plan_lines returns Target Section")
+
+    assert(seek[4] == "Target Position: 30", "Test 61 failed")
+    print("Test 61 passed: get_seek_plan_lines returns Target Position")
+
+    assert(seek[6] == "Locked: true", "Test 62 failed")
+    print("Test 62 passed: get_seek_plan_lines returns Locked")
+
+    assert(seek[7] == "Reason: seek_plan_locked", "Test 63 failed")
+    print("Test 63 passed: get_seek_plan_lines returns Reason")
 
     print("\nUI runtime tests passed successfully!")
 end

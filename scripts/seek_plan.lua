@@ -44,18 +44,63 @@ local function section_matches(section, target_section)
         or section.id == target_section
 end
 
+local function get_sections(runtime_snapshot)
+    if type(runtime_snapshot.sections) == "table" then
+        return runtime_snapshot.sections
+    end
+
+    local context = runtime_snapshot.context or {}
+    local validation = runtime_snapshot.validation or context.validation or {}
+
+    if type(validation.sections) == "table" then
+        return validation.sections
+    end
+
+    return nil
+end
+
+local function get_section_position(section)
+    if type(section.start) == "number" then
+        return section.start
+    end
+
+    if type(section.start_time) == "number" then
+        return section.start_time
+    end
+
+    if type(section.start_position) == "number" then
+        return section.start_position
+    end
+
+    if type(section.position) == "number" then
+        return section.position
+    end
+
+    if type(section.region_start) == "number" then
+        return section.region_start
+    end
+
+    if type(section.start_pos) == "number" then
+        return section.start_pos
+    end
+
+    return nil
+end
+
 local function resolve_target_position(intent, runtime_snapshot)
     if type(intent.target_position) == "number" then
         return intent.target_position
     end
 
-    if type(runtime_snapshot.sections) ~= "table" then
+    local sections = get_sections(runtime_snapshot)
+    if type(sections) ~= "table" then
         return nil
     end
 
-    for _, section in ipairs(runtime_snapshot.sections) do
-        if section_matches(section, intent.target_section) and type(section.start) == "number" then
-            return section.start
+    for _, section in ipairs(sections) do
+        local section_position = get_section_position(section)
+        if section_matches(section, intent.target_section) and type(section_position) == "number" then
+            return section_position
         end
     end
 

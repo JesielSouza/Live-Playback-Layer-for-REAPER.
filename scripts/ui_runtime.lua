@@ -101,6 +101,7 @@ function UIRuntime.build_view_model(snapshot, ui_session)
             simulation_result,
             session_state
         )
+        local seek_plan = TransportControl.build_seek_plan(nil, nil, {})
         local view_model = {
             ok = false,
             read_only = true,
@@ -135,6 +136,7 @@ function UIRuntime.build_view_model(snapshot, ui_session)
             preflight_report = preflight_report,
             safety_dashboard = safety_dashboard,
             adapter_capabilities = adapter_capabilities,
+            seek_plan = seek_plan,
             warnings = {},
             errors = { "missing_snapshot" }
         }
@@ -167,6 +169,7 @@ function UIRuntime.build_view_model(snapshot, ui_session)
         simulation_result,
         session_state
     )
+    local seek_plan = TransportControl.build_seek_plan(transport_intent, snapshot, {})
     local view_model = {
         ok = snapshot.ok == true,
         read_only = true,
@@ -201,6 +204,7 @@ function UIRuntime.build_view_model(snapshot, ui_session)
         preflight_report = preflight_report,
         safety_dashboard = safety_dashboard,
         adapter_capabilities = adapter_capabilities,
+        seek_plan = seek_plan,
         warnings = copy_list(snapshot.warnings),
         errors = copy_list(snapshot.errors)
     }
@@ -353,6 +357,21 @@ function UIRuntime.get_transport_adapter_lines(view_model)
         "Can Seek: " .. bool_label(capabilities.can_seek == true),
         "Can Mutate Project: " .. bool_label(capabilities.can_mutate_project == true),
         "Reason: " .. text_or_nil(capabilities.reason)
+    }
+end
+
+function UIRuntime.get_seek_plan_lines(view_model)
+    view_model = view_model or {}
+    local plan = view_model.seek_plan or {}
+
+    return {
+        "Action: " .. text_or_nil(plan.action),
+        "Current Section: " .. text_or_nil(plan.current_section),
+        "Target Section: " .. text_or_nil(plan.target_section),
+        "Target Position: " .. text_or_nil(plan.target_position),
+        "Seek Required: " .. bool_label(plan.seek_required == true),
+        "Locked: " .. bool_label(plan.locked == true),
+        "Reason: " .. text_or_nil(plan.reason)
     }
 end
 

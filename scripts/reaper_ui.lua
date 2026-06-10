@@ -172,6 +172,12 @@ local function loop()
             end
 
             render_separator()
+            ImGui.Text(ctx, "Seek Plan")
+            for _, line in ipairs(UIRuntime.get_seek_plan_lines(view_model)) do
+                ImGui.Text(ctx, line)
+            end
+
+            render_separator()
             ImGui.Text(ctx, "Diagnostics")
             for _, line in ipairs(UIRuntime.get_diagnostics_lines(view_model)) do
                 ImGui.Text(ctx, line)

@@ -97,3 +97,15 @@ Antes de considerar o MVP pronto para uso em palco, os seguintes cenários devem
 [ ] Confirmar que plano valido retorna `reason=seek_plan_locked`.
 [ ] Confirmar que validacao de plano valido retorna `seek_execution_locked`.
 [ ] Confirmar que nada tocou, nada moveu e nada alterou o projeto.
+
+## Seek Plan UI
+[ ] Confirmar a secao `Seek Plan`.
+[ ] Confirmar `Action: go_next`.
+[ ] Confirmar `Current Section` conforme posicao atual.
+[ ] Confirmar `Target Section` conforme proxima section.
+[ ] Confirmar `Target Position` com a posicao inicial da section alvo ou `nil` se nao resolvida.
+[ ] Confirmar `Seek Required: true` para plano valido.
+[ ] Confirmar `Locked: true`.
+[ ] Confirmar `Reason: seek_plan_locked` ou bloqueio esperado.
+[ ] Confirmar que nenhum botao operacional novo apareceu.
+[ ] Confirmar que nada tocou, nada moveu e nada alterou o projeto.

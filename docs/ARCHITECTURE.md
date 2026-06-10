@@ -106,3 +106,6 @@ The UI exposes transport adapter capabilities as read-only status. It does not c
 
 ## Locked Seek Plan Note
 The seek plan module builds read-only future movement plans from transport intents and runtime sections. It resolves target positions for validation, but execution remains locked.
+
+## Seek Plan UI Note
+The UI exposes the current seek plan as read-only status. It displays the planned target without invoking real execution or changing playback state.

@@ -100,3 +100,6 @@ A UI exibe as capacidades do adapter real de forma read-only. O bloco mostra bac
 
 ## Locked Seek Plan
 O plano de seek (`scripts/seek_plan.lua`) resolve uma posicao alvo futura a partir da intent ou das sections do runtime, mas permanece travado. Ele gera apenas dados read-only com `reason=seek_plan_locked` e nunca executa deslocamento.
+
+## Seek Plan UI
+A UI exibe o plano de seek atual de forma read-only. O bloco mostra action, section atual, section alvo, posicao alvo, estado locked e motivo sem acionar qualquer execucao.
