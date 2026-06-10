@@ -4,6 +4,7 @@
 --]]
 
 local UIRuntime = {}
+local TransportControl = require("scripts.transport_control")
 
 local function text_or_nil(value)
     if value == nil then
@@ -60,6 +61,16 @@ local function apply_labels(view_model)
         .. tostring(view_model.section_count or 0)
         .. " events="
         .. tostring(view_model.logger_event_count or 0)
+    if view_model.transport_intent_preview then
+        local intent = view_model.transport_intent_preview
+        view_model.transport_intent_label = "Transport Intent: "
+            .. tostring(intent.action or "nil")
+            .. " -> "
+            .. tostring(intent.target_section or "nil")
+            .. " (dry-run)"
+    else
+        view_model.transport_intent_label = "Transport Intent: nil -> nil (dry-run)"
+    end
     view_model.status_line = UIRuntime.format_status_line(view_model)
 end
 
@@ -85,6 +96,8 @@ function UIRuntime.build_view_model(snapshot)
             read_only_label = "true",
             validation_label = "nil / ok=false",
             diagnostics_label = "sections=0 events=0",
+            transport_intent_preview = nil,
+            transport_intent_label = "Transport Intent: nil -> nil (dry-run)",
             warnings = {},
             errors = { "missing_snapshot" }
         }
@@ -92,6 +105,7 @@ function UIRuntime.build_view_model(snapshot)
         return view_model
     end
 
+    local transport_intent = TransportControl.build_intent("go_next", snapshot, { dry_run = true })
     local view_model = {
         ok = snapshot.ok == true,
         read_only = true,
@@ -112,6 +126,8 @@ function UIRuntime.build_view_model(snapshot)
         read_only_label = "",
         validation_label = "",
         diagnostics_label = "",
+        transport_intent_preview = transport_intent,
+        transport_intent_label = "",
         warnings = copy_list(snapshot.warnings),
         errors = copy_list(snapshot.errors)
     }
@@ -154,6 +170,19 @@ end
 
 function UIRuntime.get_read_only_warning()
     return "No transport actions are triggered."
+end
+
+function UIRuntime.get_transport_preview_lines(view_model)
+    view_model = view_model or {}
+    local intent = view_model.transport_intent_preview or {}
+
+    return {
+        view_model.transport_intent_label or "Transport Intent: nil -> nil (dry-run)",
+        "Target Section: " .. text_or_nil(intent.target_section),
+        "Dry Run: " .. bool_label(intent.dry_run ~= false),
+        "Executable: " .. bool_label(intent.executable == true),
+        "Reason: " .. text_or_nil(intent.reason)
+    }
 end
 
 return UIRuntime
