@@ -6,6 +6,7 @@
 local UIRuntime = {}
 local TransportControl = require("scripts.transport_control")
 local TransportGate = require("scripts.transport_gate")
+local UISession = require("scripts.ui_session")
 
 local function text_or_nil(value)
     if value == nil then
@@ -75,8 +76,9 @@ local function apply_labels(view_model)
     view_model.status_line = UIRuntime.format_status_line(view_model)
 end
 
-function UIRuntime.build_view_model(snapshot)
+function UIRuntime.build_view_model(snapshot, ui_session)
     if type(snapshot) ~= "table" then
+        local session_state = UISession.get_state(ui_session)
         local view_model = {
             ok = false,
             read_only = true,
@@ -102,6 +104,10 @@ function UIRuntime.build_view_model(snapshot)
             transport_confirmation_label = "Manual Confirmation",
             transport_execution_enabled = false,
             transport_confirmation_required = true,
+            manual_confirmation_active = false,
+            confirmed_action = session_state.confirmed_action,
+            confirmed_target_section = session_state.confirmed_target_section,
+            confirmation_count = session_state.confirmation_count,
             transport_gate_result = TransportGate.evaluate(nil, nil),
             simulation_result = TransportControl.simulate_intent(nil, nil, {
                 enabled = false,
@@ -115,15 +121,17 @@ function UIRuntime.build_view_model(snapshot)
     end
 
     local transport_intent = TransportControl.build_intent("go_next", snapshot, { dry_run = true })
+    local session_state = UISession.get_state(ui_session)
+    local manual_confirmed = UISession.is_transport_confirmed(ui_session, transport_intent)
     local transport_gate_result = TransportGate.evaluate(transport_intent, snapshot, {
         enable_transport = false,
         require_manual_confirmation = true,
-        manual_confirmed = false,
+        manual_confirmed = manual_confirmed,
         allow_project_mutation = false
     })
     local simulation_result = TransportControl.simulate_intent(transport_intent, snapshot, {
         enabled = false,
-        manual_confirmed = false
+        manual_confirmed = manual_confirmed
     })
     local view_model = {
         ok = snapshot.ok == true,
@@ -150,6 +158,10 @@ function UIRuntime.build_view_model(snapshot)
         transport_confirmation_label = "Manual Confirmation",
         transport_execution_enabled = false,
         transport_confirmation_required = true,
+        manual_confirmation_active = manual_confirmed,
+        confirmed_action = session_state.confirmed_action,
+        confirmed_target_section = session_state.confirmed_target_section,
+        confirmation_count = session_state.confirmation_count,
         transport_gate_result = transport_gate_result,
         simulation_result = simulation_result,
         warnings = copy_list(snapshot.warnings),
@@ -212,8 +224,13 @@ end
 function UIRuntime.get_transport_confirmation_lines(view_model)
     view_model = view_model or {}
     local intent = view_model.transport_intent_preview or {}
+    local status = view_model.manual_confirmation_active == true and "CONFIRMED" or "NOT CONFIRMED"
 
     return {
+        "Status: " .. status,
+        "Confirmed Action: " .. text_or_nil(view_model.confirmed_action),
+        "Confirmed Target: " .. text_or_nil(view_model.confirmed_target_section),
+        "Count: " .. tostring(view_model.confirmation_count or 0),
         "Action: " .. text_or_nil(intent.action),
         "Target: " .. text_or_nil(intent.target_section),
         "Mode: DRY RUN",

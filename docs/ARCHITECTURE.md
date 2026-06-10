@@ -88,3 +88,6 @@ A arquitetura do **Live Playback Layer for REAPER** é dividida em camadas, de m
 
 ## Transport Simulation Note
 The transport simulator runs in memory only. It returns `executed=false` and does not call REAPER APIs, move the cursor, seek, or mutate the project.
+
+## Manual Confirmation Session Note
+Manual confirmation is stored in a local UI session only. It can feed the transport gate and simulator as state, but it does not execute transport actions or call REAPER transport APIs.

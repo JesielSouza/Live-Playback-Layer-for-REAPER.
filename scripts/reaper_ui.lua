@@ -58,8 +58,10 @@ configure_project_package_path()
 local ImGui = require("imgui")("0.10")
 local Runtime = require("scripts.runtime")
 local UIRuntime = require("scripts.ui_runtime")
+local UISession = require("scripts.ui_session")
 
 local ctx = ImGui.CreateContext("Live Playback Layer")
+local ui_session = UISession.create()
 local frame_count = 0
 
 local function value_or_nil(value)
@@ -96,7 +98,7 @@ local function loop()
 
     local view_model = nil
     if snapshot_ok then
-        view_model = UIRuntime.build_view_model(snapshot)
+        view_model = UIRuntime.build_view_model(snapshot, ui_session)
         view_model.frame_count = frame_count
     end
 
@@ -131,6 +133,12 @@ local function loop()
             ImGui.Text(ctx, value_or_nil(view_model.transport_confirmation_label))
             for _, line in ipairs(UIRuntime.get_transport_confirmation_lines(view_model)) do
                 ImGui.Text(ctx, line)
+            end
+            if ImGui.Button(ctx, "Confirm Intent (dry-run)") then
+                UISession.confirm_transport(ui_session, view_model.transport_intent_preview)
+            end
+            if ImGui.Button(ctx, "Clear Confirmation") then
+                UISession.clear_transport_confirmation(ui_session)
             end
 
             render_separator()

@@ -82,3 +82,6 @@ O projeto superou o estágio de Bootstrap Inicial. Já implementa:
 
 ## Transport Simulation
 O simulador de transporte (`scripts/transport_simulator.lua`) roda apenas em memoria. Ele mostra na UI o que teria acontecido com a intent de transporte, mas sempre retorna `executed=false` e nao chama APIs do REAPER, nao move cursor, nao faz seek e nao altera o projeto. Por padrao, a UI exibe `simulation_disabled`.
+
+## Manual Confirmation State
+A UI mantem uma confirmacao manual em memoria (`scripts/ui_session.lua`). Os botoes `Confirm Intent (dry-run)` e `Clear Confirmation` alteram apenas esse estado local de UI; eles nao acionam transporte, nao movem cursor e nao alteram o projeto.

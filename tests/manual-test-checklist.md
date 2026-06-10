@@ -39,5 +39,16 @@ Antes de considerar o MVP pronto para uso em palco, os seguintes cenários devem
 [ ] Confirmar `Simulated: true`.
 [ ] Confirmar `Executed: false`.
 [ ] Confirmar `Message: simulation_disabled`.
-[ ] Confirmar que nenhum botao operacional aparece.
+[ ] Confirmar que nenhum botao operacional de transporte aparece.
 [ ] Confirmar que nada e executado no REAPER.
+
+## Manual Confirmation State
+[ ] Confirmar Manual Confirmation com `Status: NOT CONFIRMED`.
+[ ] Clicar `Confirm Intent (dry-run)`.
+[ ] Confirmar `Status: CONFIRMED`.
+[ ] Confirmar `Count` incrementado.
+[ ] Confirmar que Transport Gate continua `Executable: false`.
+[ ] Confirmar que Transport Simulation continua `Executed: false`.
+[ ] Mover o cursor para outra section e confirmar que a confirmacao anterior nao vale para a nova intent.
+[ ] Clicar `Clear Confirmation` e confirmar `Status: NOT CONFIRMED`.
+[ ] Confirmar que nada tocou, nada moveu e nada alterou o projeto.

@@ -1,4 +1,5 @@
 local ui_runtime = require("scripts.ui_runtime")
+local ui_session = require("scripts.ui_session")
 
 local function build_snapshot()
     return {
@@ -118,39 +119,51 @@ local function run_ui_runtime_tests()
     print("Test 26 passed: get_read_only_warning returns read-only warning")
 
     local confirmation = ui_runtime.get_transport_confirmation_lines(view_model)
-    assert(confirmation[1] == "Action: go_next", "Test 27 failed")
-    print("Test 27 passed: get_transport_confirmation_lines returns Action")
+    assert(confirmation[1] == "Status: NOT CONFIRMED", "Test 27 failed")
+    print("Test 27 passed: get_transport_confirmation_lines returns Status")
 
-    assert(confirmation[2] == "Target: CHORUS_1", "Test 28 failed")
-    print("Test 28 passed: get_transport_confirmation_lines returns Target")
+    assert(confirmation[5] == "Action: go_next", "Test 28 failed")
+    print("Test 28 passed: get_transport_confirmation_lines returns Action")
 
-    assert(confirmation[3] == "Mode: DRY RUN", "Test 29 failed")
+    assert(confirmation[6] == "Target: CHORUS_1", "Test 29 failed")
+    print("Test 29 passed: get_transport_confirmation_lines returns Target")
+
+    assert(confirmation[7] == "Mode: DRY RUN", "Test 30 failed")
     print("Test 29 passed: get_transport_confirmation_lines returns dry-run mode")
 
-    assert(confirmation[4] == "Execution: DISABLED", "Test 30 failed")
+    assert(confirmation[8] == "Execution: DISABLED", "Test 31 failed")
     print("Test 30 passed: get_transport_confirmation_lines returns disabled execution")
 
-    assert(confirmation[5] == "Confirmation: visual only", "Test 31 failed")
+    assert(confirmation[9] == "Confirmation: visual only", "Test 32 failed")
     print("Test 31 passed: get_transport_confirmation_lines returns visual-only confirmation")
 
-    assert(view_model.transport_execution_enabled == false, "Test 32 failed")
+    assert(view_model.transport_execution_enabled == false, "Test 33 failed")
     print("Test 32 passed: build_view_model sets transport_execution_enabled=false")
 
-    assert(view_model.transport_confirmation_required == true, "Test 33 failed")
+    assert(view_model.transport_confirmation_required == true, "Test 34 failed")
     print("Test 33 passed: build_view_model sets transport_confirmation_required=true")
 
-    assert(view_model.simulation_result.message == "simulation_disabled", "Test 34 failed")
+    assert(view_model.simulation_result.message == "simulation_disabled", "Test 35 failed")
     print("Test 34 passed: build_view_model sets simulation_disabled by default")
 
     local simulation = ui_runtime.get_transport_simulation_lines(view_model)
-    assert(simulation[1] == "Simulated: true", "Test 35 failed")
+    assert(simulation[1] == "Simulated: true", "Test 36 failed")
     print("Test 35 passed: get_transport_simulation_lines returns Simulated")
 
-    assert(simulation[2] == "Executed: false", "Test 36 failed")
+    assert(simulation[2] == "Executed: false", "Test 37 failed")
     print("Test 36 passed: get_transport_simulation_lines returns Executed")
 
-    assert(simulation[3] == "Message: simulation_disabled", "Test 37 failed")
+    assert(simulation[3] == "Message: simulation_disabled", "Test 38 failed")
     print("Test 37 passed: get_transport_simulation_lines returns Message")
+
+    assert(view_model.manual_confirmation_active == false, "Test 39 failed")
+    print("Test 39 passed: build_view_model without confirmation sets manual_confirmation_active=false")
+
+    local session = ui_session.create()
+    ui_session.confirm_transport(session, view_model.transport_intent_preview)
+    local confirmed_view = ui_runtime.build_view_model(build_snapshot(), session)
+    assert(confirmed_view.manual_confirmation_active == true, "Test 40 failed")
+    print("Test 40 passed: build_view_model with matching confirmation sets manual_confirmation_active=true")
 
     print("\nUI runtime tests passed successfully!")
 end
