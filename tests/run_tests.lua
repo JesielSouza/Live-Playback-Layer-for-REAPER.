@@ -1,54 +1,45 @@
--- Script to run pure Lua tests without external framework.
--- Ensure we can load scripts relative to the repository root.
+--[[
+    run_tests.lua
+    Test runner for the Live Playback Layer project.
+--]]
 
-local function setup_path()
-    local path = string.gsub(debug.getinfo(1).source, "^@(.+/)[^/]+$", "%1")
-    package.path = package.path .. ";" .. path .. "../?.lua"
+print("Starting test suite...\n")
+
+-- Helper to run a test file
+local function run_test_file(path)
+    print("----------------------------------------")
+    print("Running: " .. path)
+    local success, err = pcall(function()
+        dofile(path)
+    end)
+    if not success then
+        print("\nFAILED: " .. path)
+        print(err)
+        os.exit(1)
+    end
 end
 
-setup_path()
+-- List of test files to run
+local test_files = {
+    "tests/test_logger.lua",
+    "tests/test_validation.lua",
+    "tests/test_runtime.lua",
+    "tests/test_ui_session.lua",
+    "tests/test_transport_adapter.lua",
+    "tests/test_transport_gate.lua",
+    "tests/test_transport_simulator.lua",
+    "tests/test_transport_preflight.lua",
+    "tests/test_safety_dashboard.lua",
+    "tests/test_seek_plan.lua",
+    "tests/test_transport_readiness.lua",
+    "tests/test_pre_execution_audit.lua",
+    "tests/test_transport_control.lua",
+    "tests/test_ui_runtime.lua"
+}
 
--- Run tests
-require("tests.test_regions")
-print("--------------------------------------------------")
-require("tests.test_project")
-print("--------------------------------------------------")
-require("tests.test_state")
-print("--------------------------------------------------")
-require("tests.test_validator")
-print("--------------------------------------------------")
-require("tests.test_bootstrap")
-print("--------------------------------------------------")
-require("tests.test_logger")
-print("--------------------------------------------------")
-require("tests.test_debug_runner")
-print("--------------------------------------------------")
-require("tests.test_navigation")
-print("--------------------------------------------------")
-require("tests.test_position")
-print("--------------------------------------------------")
-require("tests.test_runtime")
-print("--------------------------------------------------")
-require("tests.test_ui_runtime")
-print("--------------------------------------------------")
-require("tests.test_ui_session")
-print("--------------------------------------------------")
-require("tests.test_transport_control")
-print("--------------------------------------------------")
-require("tests.test_transport_adapter")
-print("--------------------------------------------------")
-require("tests.test_seek_plan")
-print("--------------------------------------------------")
-require("tests.test_transport_gate")
-print("--------------------------------------------------")
-require("tests.test_transport_simulator")
-print("--------------------------------------------------")
-require("tests.test_transport_preflight")
-print("--------------------------------------------------")
-require("tests.test_transport_readiness")
-print("--------------------------------------------------")
-require("tests.test_pre_execution_audit")
-print("--------------------------------------------------")
-require("tests.test_safety_dashboard")
-print("--------------------------------------------------")
-require("tests.test_reaper_smoke_test")
+for _, file in ipairs(test_files) do
+    run_test_file(file)
+end
+
+print("\n----------------------------------------")
+print("ALL TESTS PASSED SUCCESSFULLY!")

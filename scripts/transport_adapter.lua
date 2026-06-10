@@ -1,7 +1,6 @@
 --[[
     transport_adapter.lua
-    Future real transport adapter interface. The implementation is locked and
-    returns disabled results only.
+    Real transport adapter for REAPER.
 --]]
 
 local TransportAdapter = {}
@@ -9,13 +8,13 @@ local SeekPlan = require("scripts.seek_plan")
 
 function TransportAdapter.get_capabilities(options)
     return {
-        real_transport_supported = false,
-        real_transport_enabled = false,
-        can_play_stop = false,
-        can_seek = false,
+        real_transport_supported = true,
+        real_transport_enabled = true,
+        can_play_stop = true,
+        can_seek = true,
         can_mutate_project = false,
         backend = "reaper",
-        reason = "real_transport_locked"
+        reason = "mvp_ready"
     }
 end
 
@@ -50,7 +49,13 @@ function TransportAdapter.validate_real_execution(intent, runtime_snapshot, gate
         return validation_result("gate_not_executable")
     end
 
-    return validation_result("real_transport_locked")
+    return {
+        ok = true,
+        executable = true,
+        reason = "gate_passed",
+        warnings = {},
+        errors = {}
+    }
 end
 
 function TransportAdapter.build_seek_plan(intent, runtime_snapshot, options)
@@ -62,7 +67,7 @@ function TransportAdapter.execute_real(intent, runtime_snapshot, gate_result, op
     local action = type(intent) == "table" and intent.action or nil
     local target_section = type(intent) == "table" and intent.target_section or nil
 
-    if not options.enable_real_cursor_move then
+    if not options.enable_real_cursor_move and not options.enable_real_seek then
         return {
             ok = false,
             executed = false,
@@ -156,7 +161,8 @@ function TransportAdapter.execute_real(intent, runtime_snapshot, gate_result, op
     end
 
     -- Real Action
-    _G.reaper.SetEditCurPos(target_position, false, false)
+    local seekplay = options.seekplay == true
+    _G.reaper.SetEditCurPos(target_position, false, seekplay)
 
     return {
         ok = true,
@@ -165,9 +171,87 @@ function TransportAdapter.execute_real(intent, runtime_snapshot, gate_result, op
         action = action,
         target_section = target_section,
         target_position = target_position,
-        reason = "cursor_move_executed",
+        reason = seekplay and "seek_executed" or "cursor_move_executed",
         warnings = {},
         errors = {}
+    }
+end
+
+function TransportAdapter.execute_play(options)
+    options = options or {}
+
+    if not options.enable_real_play then
+        return { ok = false, executed = false, reason = "real_play_not_enabled" }
+    end
+
+    if not options.execution_armed then
+        return { ok = false, executed = false, reason = "execution_not_armed" }
+    end
+
+    if not (_G.reaper) then
+        return { ok = false, executed = false, reason = "reaper_not_available" }
+    end
+
+    if type(_G.reaper.OnPlayButton) ~= "function" then
+        return { ok = false, executed = false, reason = "play_not_available" }
+    end
+
+    _G.reaper.OnPlayButton()
+
+    return {
+        ok = true,
+        executed = true,
+        action = "play",
+        reason = "play_executed"
+    }
+end
+
+function TransportAdapter.execute_stop(options)
+    options = options or {}
+
+    if not options.enable_real_stop then
+        return { ok = false, executed = false, reason = "real_stop_not_enabled" }
+    end
+
+    if not (_G.reaper) then
+        return { ok = false, executed = false, reason = "reaper_not_available" }
+    end
+
+    if type(_G.reaper.OnStopButton) ~= "function" then
+        return { ok = false, executed = false, reason = "stop_not_available" }
+    end
+
+    _G.reaper.OnStopButton()
+
+    return {
+        ok = true,
+        executed = true,
+        action = "stop",
+        reason = "stop_executed"
+    }
+end
+
+function TransportAdapter.get_playback_status(options)
+    local reaper_available = (_G.reaper ~= nil)
+    local play_state = nil
+    local play_position = nil
+
+    if reaper_available then
+        if type(_G.reaper.GetPlayState) == "function" then
+            play_state = _G.reaper.GetPlayState()
+        end
+        if type(_G.reaper.GetPlayPosition) == "function" then
+            play_position = _G.reaper.GetPlayPosition()
+        end
+    end
+
+    return {
+        reaper_available = reaper_available,
+        play_state = play_state,
+        is_playing = play_state == 1 or play_state == 5, -- 1=playing, 5=recording
+        is_paused = play_state == 2,
+        is_recording = play_state == 4 or play_state == 5,
+        play_position = play_position
     }
 end
 

@@ -12,8 +12,9 @@ local function apply_defaults(session)
     session.confirmed_target_section = nil
     session.confirmation_count = 0
     session.execution_armed = false
-    session.last_execution_result = nil
     session.debug_visible = false
+    session.last_execution_result = nil
+    session.last_operator_action = nil
     return session
 end
 
@@ -59,6 +60,7 @@ function UISession.is_transport_confirmed(session, intent)
         return false
     end
 
+    -- Confirmação só vale para mesma action e target_section
     return intent.action == session.confirmed_action
         and intent.target_section == session.confirmed_target_section
 end
@@ -82,19 +84,6 @@ function UISession.is_execution_armed(session)
     return session.execution_armed == true
 end
 
-function UISession.set_last_execution_result(session, result)
-    session = session or UISession.create()
-    session.last_execution_result = result
-    return session
-end
-
-function UISession.get_last_execution_result(session)
-    if type(session) ~= "table" then
-        return nil
-    end
-    return session.last_execution_result
-end
-
 function UISession.toggle_debug(session)
     session = session or UISession.create()
     session.debug_visible = not (session.debug_visible == true)
@@ -114,6 +103,25 @@ function UISession.is_debug_visible(session)
     return session.debug_visible == true
 end
 
+function UISession.set_last_execution_result(session, result)
+    session = session or UISession.create()
+    session.last_execution_result = result
+    return session
+end
+
+function UISession.get_last_execution_result(session)
+    if type(session) ~= "table" then
+        return nil
+    end
+    return session.last_execution_result
+end
+
+function UISession.set_last_operator_action(session, action)
+    session = session or UISession.create()
+    session.last_operator_action = action
+    return session
+end
+
 function UISession.get_state(session)
     session = session or {}
 
@@ -123,8 +131,9 @@ function UISession.get_state(session)
         confirmed_target_section = session.confirmed_target_section,
         confirmation_count = session.confirmation_count or 0,
         execution_armed = session.execution_armed == true,
+        debug_visible = session.debug_visible == true,
         last_execution_result = session.last_execution_result,
-        debug_visible = session.debug_visible == true
+        last_operator_action = session.last_operator_action
     }
 end
 

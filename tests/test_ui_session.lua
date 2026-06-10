@@ -113,6 +113,11 @@ local function run_ui_session_tests()
     assert(state3.debug_visible == false, "Test 24 failed: get_state includes debug_visible")
     print("Test 19-24 passed: debug visibility state management works")
 
+    ui_session.set_last_operator_action(session, "test_action")
+    local state4 = ui_session.get_state(session)
+    assert(state4.last_operator_action == "test_action", "Test 25 failed")
+    print("Test 25 passed: last_operator_action saved")
+
     print("\nUI session tests passed successfully!")
 end
 

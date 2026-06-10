@@ -1,7 +1,6 @@
 --[[
     transport_control.lua
-    Dry-run-only transport intent builder. This module never calls REAPER
-    transport APIs and does not mutate the project.
+    Transport intent builder and execution dispatcher.
 --]]
 
 local TransportControl = {}
@@ -85,12 +84,19 @@ function TransportControl.build_intent(action, runtime_snapshot, options)
     end
 
     if not intent.dry_run then
-        intent.ok = false
-        intent.reason = "transport_execution_not_enabled"
-        table.insert(intent.errors, "transport_execution_not_enabled")
+        -- In MVP, intents are built as dry-run first, then confirmed/executed
+        intent.dry_run = true
     end
 
     return intent
+end
+
+function TransportControl.build_next_intent(runtime_snapshot)
+    return TransportControl.build_intent("go_next", runtime_snapshot, { dry_run = true })
+end
+
+function TransportControl.build_loop_current_intent(runtime_snapshot)
+    return TransportControl.build_intent("loop_current", runtime_snapshot, { dry_run = true })
 end
 
 function TransportControl.format_intent(intent)
@@ -131,6 +137,18 @@ end
 
 function TransportControl.execute_real_intent(intent, runtime_snapshot, gate_result, options)
     return TransportAdapter.execute_real(intent, runtime_snapshot, gate_result, options)
+end
+
+function TransportControl.execute_play(options)
+    return TransportAdapter.execute_play(options)
+end
+
+function TransportControl.execute_stop(options)
+    return TransportAdapter.execute_stop(options)
+end
+
+function TransportControl.get_playback_status(options)
+    return TransportAdapter.get_playback_status(options)
 end
 
 function TransportControl.build_seek_plan(intent, runtime_snapshot, options)

@@ -47,6 +47,14 @@ local function copy_list(values)
     return out
 end
 
+local function playback_state_label(status)
+    if status.is_playing then return "playing" end
+    if status.is_paused then return "paused" end
+    if status.is_recording then return "recording" end
+    if status.reaper_available then return "stopped" end
+    return "unknown"
+end
+
 function UIRuntime.format_status_line(view_model)
     view_model = view_model or {}
 
@@ -84,6 +92,7 @@ end
 function UIRuntime.build_view_model(snapshot, ui_session)
     local adapter_capabilities = TransportAdapter.get_capabilities({})
     local session_state = UISession.get_state(ui_session)
+    local playback_status = TransportControl.get_playback_status({})
 
     if type(snapshot) ~= "table" then
         local transport_gate_result = TransportGate.evaluate(nil, nil)
@@ -164,7 +173,9 @@ function UIRuntime.build_view_model(snapshot, ui_session)
             execution_armed = session_state.execution_armed,
             last_execution_result = session_state.last_execution_result,
             debug_visible = session_state.debug_visible,
+            playback_status = playback_status,
             operator_summary = {
+                playback = playback_state_label(playback_status),
                 current_section = "nil",
                 target_section = "nil",
                 target_position = "nil",
@@ -172,7 +183,7 @@ function UIRuntime.build_view_model(snapshot, ui_session)
                 execution_armed = false,
                 last_execution_reason = nil,
                 last_execution_executed = nil,
-                safety_note = "Cursor move only. No play/stop."
+                safety_note = "Manual actions only. No automatic jumps."
             },
             warnings = {},
             errors = { "missing_snapshot" }
@@ -182,6 +193,7 @@ function UIRuntime.build_view_model(snapshot, ui_session)
     end
 
     local transport_intent = TransportControl.build_intent("go_next", snapshot, { dry_run = true })
+    local loop_current_intent = TransportControl.build_intent("loop_current", snapshot, { dry_run = true })
     local manual_confirmed = UISession.is_transport_confirmed(ui_session, transport_intent)
     local transport_gate_result = TransportGate.evaluate(transport_intent, snapshot, {
         enable_transport = false,
@@ -247,6 +259,7 @@ function UIRuntime.build_view_model(snapshot, ui_session)
         validation_label = "",
         diagnostics_label = "",
         transport_intent_preview = transport_intent,
+        loop_current_intent = loop_current_intent,
         transport_intent_label = "",
         transport_confirmation_label = "Manual Confirmation",
         transport_execution_enabled = false,
@@ -266,7 +279,9 @@ function UIRuntime.build_view_model(snapshot, ui_session)
         execution_armed = session_state.execution_armed,
         last_execution_result = session_state.last_execution_result,
         debug_visible = session_state.debug_visible,
+        playback_status = playback_status,
         operator_summary = {
+            playback = playback_state_label(playback_status),
             current_section = text_or_nil(snapshot.current_section),
             target_section = text_or_nil(transport_intent.target_section),
             target_position = position_label(seek_plan.target_position),
@@ -274,7 +289,7 @@ function UIRuntime.build_view_model(snapshot, ui_session)
             execution_armed = session_state.execution_armed == true,
             last_execution_reason = session_state.last_execution_result and session_state.last_execution_result.reason or nil,
             last_execution_executed = session_state.last_execution_result and session_state.last_execution_result.executed or nil,
-            safety_note = "Cursor move only. No play/stop."
+            safety_note = "Manual actions only. No automatic jumps."
         },
         warnings = copy_list(snapshot.warnings),
         errors = copy_list(snapshot.errors)
@@ -347,6 +362,7 @@ function UIRuntime.get_operator_lines(view_model)
     local summary = view_model.operator_summary or {}
 
     local lines = {
+        "Playback: " .. tostring(summary.playback or "unknown"),
         "Current Section: " .. tostring(summary.current_section or "nil"),
         "Next Target: " .. tostring(summary.target_section or "nil"),
         "Target Position: " .. tostring(summary.target_position or "nil"),
@@ -359,7 +375,7 @@ function UIRuntime.get_operator_lines(view_model)
             .. " reason=" .. tostring(summary.last_execution_reason))
     end
 
-    table.insert(lines, "Safety: " .. tostring(summary.safety_note or "Cursor move only. No play/stop."))
+    table.insert(lines, "Safety: " .. tostring(summary.safety_note or "Manual actions only. No automatic jumps."))
 
     return lines
 end
