@@ -6,6 +6,7 @@
 
 local TransportControl = {}
 local TransportGate = require("scripts.transport_gate")
+local TransportSimulator = require("scripts.transport_simulator")
 
 local VALID_ACTIONS = {
     go_next = true,
@@ -121,6 +122,10 @@ function TransportControl.execute_intent(intent, options)
         dry_run = true,
         reason = "transport_execution_not_enabled"
     }
+end
+
+function TransportControl.simulate_intent(intent, runtime_snapshot, options)
+    return TransportSimulator.simulate(intent, runtime_snapshot, options)
 end
 
 return TransportControl

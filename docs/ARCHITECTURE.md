@@ -85,3 +85,6 @@ A arquitetura do **Live Playback Layer for REAPER** é dividida em camadas, de m
 * **Responsabilidade:** Prover o primeiro script a ser carregado **dentro do ambiente REAPER**.
 * **Fluxo:** Executa o Bootstrap Pipeline invocando o Adapter real sobre o projeto aberto no momento e retorna um log analítico usando a API do console do REAPER (`ShowConsoleMsg`).
 * **Regras de Segurança:** É completamente **read-only**, não interage com ações destrutivas ou transporte real, sendo apenas uma demonstração do arcabouço FSM base para o REAPER.
+
+## Transport Simulation Note
+The transport simulator runs in memory only. It returns `executed=false` and does not call REAPER APIs, move the cursor, seek, or mutate the project.

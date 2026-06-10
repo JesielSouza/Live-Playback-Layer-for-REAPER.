@@ -139,6 +139,19 @@ local function run_ui_runtime_tests()
     assert(view_model.transport_confirmation_required == true, "Test 33 failed")
     print("Test 33 passed: build_view_model sets transport_confirmation_required=true")
 
+    assert(view_model.simulation_result.message == "simulation_disabled", "Test 34 failed")
+    print("Test 34 passed: build_view_model sets simulation_disabled by default")
+
+    local simulation = ui_runtime.get_transport_simulation_lines(view_model)
+    assert(simulation[1] == "Simulated: true", "Test 35 failed")
+    print("Test 35 passed: get_transport_simulation_lines returns Simulated")
+
+    assert(simulation[2] == "Executed: false", "Test 36 failed")
+    print("Test 36 passed: get_transport_simulation_lines returns Executed")
+
+    assert(simulation[3] == "Message: simulation_disabled", "Test 37 failed")
+    print("Test 37 passed: get_transport_simulation_lines returns Message")
+
     print("\nUI runtime tests passed successfully!")
 end
 

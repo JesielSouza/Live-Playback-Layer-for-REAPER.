@@ -103,6 +103,10 @@ function UIRuntime.build_view_model(snapshot)
             transport_execution_enabled = false,
             transport_confirmation_required = true,
             transport_gate_result = TransportGate.evaluate(nil, nil),
+            simulation_result = TransportControl.simulate_intent(nil, nil, {
+                enabled = false,
+                manual_confirmed = false
+            }),
             warnings = {},
             errors = { "missing_snapshot" }
         }
@@ -116,6 +120,10 @@ function UIRuntime.build_view_model(snapshot)
         require_manual_confirmation = true,
         manual_confirmed = false,
         allow_project_mutation = false
+    })
+    local simulation_result = TransportControl.simulate_intent(transport_intent, snapshot, {
+        enabled = false,
+        manual_confirmed = false
     })
     local view_model = {
         ok = snapshot.ok == true,
@@ -143,6 +151,7 @@ function UIRuntime.build_view_model(snapshot)
         transport_execution_enabled = false,
         transport_confirmation_required = true,
         transport_gate_result = transport_gate_result,
+        simulation_result = simulation_result,
         warnings = copy_list(snapshot.warnings),
         errors = copy_list(snapshot.errors)
     }
@@ -225,6 +234,18 @@ function UIRuntime.get_transport_gate_lines(view_model)
         "Transport Enabled: " .. bool_label(checks.transport_enabled == true),
         "Manual Confirmation: " .. bool_label(checks.manual_confirmation_ok == true),
         "Mutation Allowed: " .. bool_label(checks.project_mutation_allowed == true)
+    }
+end
+
+function UIRuntime.get_transport_simulation_lines(view_model)
+    view_model = view_model or {}
+    local result = view_model.simulation_result or {}
+
+    return {
+        "Simulated: " .. bool_label(result.simulated == true),
+        "Executed: " .. bool_label(result.executed == true),
+        "Message: " .. text_or_nil(result.message),
+        "Target Section: " .. text_or_nil(result.target_section)
     }
 end
 

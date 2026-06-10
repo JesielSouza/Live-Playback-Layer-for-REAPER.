@@ -32,3 +32,12 @@ Antes de considerar o MVP pronto para uso em palco, os seguintes cenários devem
 - [ ] **Fade Out:** Disparar Fade Out. O volume deve descer de forma suave até 0, e em seguida a música deve parar.
 - [ ] **Roteamento Básico:** Checar o output no log para atestar que o clique está direcionado apenas à saída de hardware isolada (sem master).
 - [ ] **Operação de 30 minutos:** Deixar o script rodando em idle ou play por meia hora. Navegar na UI de vez em quando. O sistema não pode travar o frame rate do REAPER.
+
+## Transport Execution Simulator
+[ ] Rodar `scripts/reaper_ui.lua`.
+[ ] Confirmar a secao `Transport Simulation`.
+[ ] Confirmar `Simulated: true`.
+[ ] Confirmar `Executed: false`.
+[ ] Confirmar `Message: simulation_disabled`.
+[ ] Confirmar que nenhum botao operacional aparece.
+[ ] Confirmar que nada e executado no REAPER.

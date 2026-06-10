@@ -79,3 +79,6 @@ O projeto superou o estágio de Bootstrap Inicial. Já implementa:
 5. Criação da UI de Palco (ReaImGui)
 6. Implementação do carregamento e transição de projetos (Setlists)
 7. Finalização do MVP (Logs, Safe Mode, testes integrados)
+
+## Transport Simulation
+O simulador de transporte (`scripts/transport_simulator.lua`) roda apenas em memoria. Ele mostra na UI o que teria acontecido com a intent de transporte, mas sempre retorna `executed=false` e nao chama APIs do REAPER, nao move cursor, nao faz seek e nao altera o projeto. Por padrao, a UI exibe `simulation_disabled`.
