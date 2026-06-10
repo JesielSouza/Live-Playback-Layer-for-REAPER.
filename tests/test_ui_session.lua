@@ -118,6 +118,24 @@ local function run_ui_session_tests()
     assert(state4.last_operator_action == "test_action", "Test 25 failed")
     print("Test 25 passed: last_operator_action saved")
 
+    -- v0.2 Selection tests
+    ui_session.select_section(session, "CHORUS_1", 30.0)
+    assert(ui_session.get_selected_section(session) == "CHORUS_1", "Test 26 failed")
+    assert(ui_session.is_section_selected(session, "CHORUS_1") == true, "Test 26 failed")
+    print("Test 26 passed: select_section works")
+
+    ui_session.confirm_selected_section(session, { ok = true, action = "jump_to_section", target_section = "CHORUS_1" })
+    assert(session.transport_confirmed == true, "Test 27 failed")
+    print("Test 27 passed: confirm_selected_section works")
+
+    ui_session.select_section(session, "ENDING", 50.0)
+    assert(session.transport_confirmed == false, "Test 28 failed")
+    print("Test 28 passed: changing selection invalidates confirmation")
+
+    ui_session.clear_selected_section(session)
+    assert(ui_session.get_selected_section(session) == nil, "Test 29 failed")
+    print("Test 29 passed: clear_selected_section works")
+
     print("\nUI session tests passed successfully!")
 end
 

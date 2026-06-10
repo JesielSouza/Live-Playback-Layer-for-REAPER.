@@ -7,12 +7,14 @@ local TransportControl = {}
 local TransportAdapter = require("scripts.transport_adapter")
 local TransportGate = require("scripts.transport_gate")
 local TransportSimulator = require("scripts.transport_simulator")
+local SongMap = require("scripts.song_map")
 
 local VALID_ACTIONS = {
     go_next = true,
     go_previous = true,
     loop_current = true,
-    stop_at_end = true
+    stop_at_end = true,
+    jump_to_section = true
 }
 
 local function default_options(options)
@@ -77,7 +79,7 @@ function TransportControl.build_intent(action, runtime_snapshot, options)
         intent.decision = "STOP_AT_END_INTENT"
     end
 
-    if action ~= "stop_at_end" and not intent.target_section then
+    if action ~= "stop_at_end" and action ~= "jump_to_section" and not intent.target_section then
         intent.ok = false
         intent.reason = "missing_target_section"
         table.insert(intent.errors, "missing_target_section")
@@ -96,7 +98,17 @@ function TransportControl.build_next_intent(runtime_snapshot)
 end
 
 function TransportControl.build_loop_current_intent(runtime_snapshot)
-    return TransportControl.build_intent("loop_current", runtime_snapshot, { dry_run = true })
+    local song_map = SongMap.build(runtime_snapshot)
+    return SongMap.build_loop_current_intent(song_map)
+end
+
+function TransportControl.build_manual_section_intent(runtime_snapshot, section_id_or_name)
+    local song_map = SongMap.build(runtime_snapshot)
+    return SongMap.build_intent_for_section(song_map, section_id_or_name)
+end
+
+function TransportControl.build_song_map(runtime_snapshot)
+    return SongMap.build(runtime_snapshot)
 end
 
 function TransportControl.format_intent(intent)

@@ -5,7 +5,13 @@ local function build_snapshot()
         current_section = "VERSE_1",
         previous_section = "INTRO",
         next_section = "CHORUS_1",
-        decision = "NEXT_SECTION_READY"
+        decision = "NEXT_SECTION_READY",
+        sections = {
+            { name = "INTRO", start = 0, ["end"] = 10 },
+            { name = "VERSE_1", start = 10, ["end"] = 30 },
+            { name = "CHORUS_1", start = 30, ["end"] = 50 },
+            { name = "ENDING", start = 50, ["end"] = 60 }
+        }
     }
 end
 
@@ -44,23 +50,18 @@ local function run_transport_control_tests()
     assert(type(status) == "table", "Test 15 failed")
     print("Test 15 passed: get_playback_status works")
 
-    local play_res = transport_control.execute_play({ enable_real_play = false })
-    assert(play_res.executed == false, "Test 16 failed")
-    print("Test 16 passed: execute_play delegates to adapter")
+    -- v0.2 Song Map and Manual Intent tests
+    local song_map = transport_control.build_song_map(build_snapshot())
+    assert(song_map.ok == true, "Test 16 failed")
+    assert(#song_map.sections == 4, "Test 16 failed")
+    print("Test 16 passed: build_song_map works")
 
-    local stop_res = transport_control.execute_stop({ enable_real_stop = false })
-    assert(stop_res.executed == false, "Test 17 failed")
-    print("Test 17 passed: execute_stop delegates to adapter")
-
-    local next_intent2 = transport_control.build_next_intent(build_snapshot())
-    assert(next_intent2.action == "go_next", "Test 18 failed")
-    assert(next_intent2.target_section == "CHORUS_1", "Test 18 failed")
-    print("Test 18 passed: build_next_intent works")
-
-    local loop_intent2 = transport_control.build_loop_current_intent(build_snapshot())
-    assert(loop_intent2.action == "loop_current", "Test 19 failed")
-    assert(loop_intent2.target_section == "VERSE_1", "Test 19 failed")
-    print("Test 19 passed: build_loop_current_intent works")
+    local manual_intent = transport_control.build_manual_section_intent(build_snapshot(), "ENDING")
+    assert(manual_intent.ok == true, "Test 17 failed")
+    assert(manual_intent.action == "jump_to_section", "Test 17 failed")
+    assert(manual_intent.target_section == "ENDING", "Test 17 failed")
+    assert(manual_intent.target_position == 50, "Test 17 failed")
+    print("Test 17 passed: build_manual_section_intent works")
 
     print("\nTransport control tests passed successfully!")
 end

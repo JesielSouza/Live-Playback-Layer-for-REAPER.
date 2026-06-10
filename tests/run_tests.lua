@@ -34,7 +34,9 @@ local test_files = {
     "tests/test_transport_readiness.lua",
     "tests/test_pre_execution_audit.lua",
     "tests/test_transport_control.lua",
-    "tests/test_ui_runtime.lua"
+    "tests/test_ui_runtime.lua",
+    "tests/test_song_map.lua",
+    "tests/test_ui_timeline.lua"
 }
 
 for _, file in ipairs(test_files) do

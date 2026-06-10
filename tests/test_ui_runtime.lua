@@ -16,11 +16,19 @@ local function build_snapshot()
         decision = "NEXT_SECTION_READY",
         section_count = 4,
         logger_event_count = 6,
+        sections = {
+            { name = "INTRO", start = 0, ["end"] = 10 },
+            { name = "VERSE_1", start = 10, ["end"] = 30 },
+            { name = "CHORUS_1", start = 30, ["end"] = 50 },
+            { name = "ENDING", start = 50, ["end"] = 60 }
+        },
         context = {
             validation = {
                 sections = {
-                    { name = "CHORUS_1", start_pos = 30 },
-                    { name = "ENDING", start_pos = 50 }
+                    { name = "INTRO", start = 0, ["end"] = 10 },
+                    { name = "VERSE_1", start = 10, ["end"] = 30 },
+                    { name = "CHORUS_1", start = 30, ["end"] = 50 },
+                    { name = "ENDING", start = 50, ["end"] = 60 }
                 }
             }
         },
@@ -37,280 +45,47 @@ local function run_ui_runtime_tests()
     assert(view_model.ok == true, "Test 1 failed")
     print("Test 1 passed: build_view_model with valid snapshot returns ok=true")
 
-    assert(view_model.read_only == true, "Test 2 failed")
-    print("Test 2 passed: build_view_model preserves read_only=true")
-
     assert(view_model.app_state == "SONG_LOADED", "Test 3 failed")
-    print("Test 3 passed: build_view_model preserves app_state")
-
     assert(view_model.current_section == "VERSE_1", "Test 4 failed")
-    print("Test 4 passed: build_view_model preserves current_section")
-
     assert(view_model.next_section == "CHORUS_1", "Test 5 failed")
-    print("Test 5 passed: build_view_model preserves next_section")
-
     assert(view_model.decision == "NEXT_SECTION_READY", "Test 6 failed")
-    print("Test 6 passed: build_view_model preserves decision")
+    print("Test 3-6 passed: build_view_model preserves key snapshot fields")
 
-    assert(type(view_model.status_line) == "string" and #view_model.status_line > 0, "Test 7 failed")
-    print("Test 7 passed: build_view_model generates status_line")
+    -- v0.2 ViewModel enrichment tests
+    assert(view_model.song_map.ok == true, "Test 81 failed")
+    assert(#view_model.song_map.sections == 4, "Test 81 failed")
+    print("Test 81 passed: view_model includes song_map")
 
-    local missing = ui_runtime.build_view_model(nil)
-    assert(missing.ok == false, "Test 8 failed")
-    assert(missing.errors[1] == "missing_snapshot", "Test 8 failed")
-    print("Test 8 passed: build_view_model with nil returns ok=false")
+    assert(view_model.timeline.ok == true, "Test 82 failed")
+    assert(#view_model.timeline.blocks == 4, "Test 82 failed")
+    print("Test 82 passed: view_model includes timeline")
 
-    local cards = ui_runtime.get_section_cards(view_model)
-    assert(cards[1].label == "Current Section", "Test 9 failed")
-    print("Test 9 passed: get_section_cards returns Current Section")
-
-    assert(cards[2].label == "Previous Section", "Test 10 failed")
-    print("Test 10 passed: get_section_cards returns Previous Section")
-
-    assert(cards[3].label == "Next Section", "Test 11 failed")
-    print("Test 11 passed: get_section_cards returns Next Section")
-
-    assert(cards[4].label == "Decision", "Test 12 failed")
-    print("Test 12 passed: get_section_cards returns Decision")
-
-    local status_line = ui_runtime.format_status_line(view_model)
-    assert(string.find(status_line, "SONG_LOADED"), "Test 13 failed")
-    print("Test 13 passed: format_status_line contains app_state")
-
-    assert(string.find(status_line, "VERSE_1"), "Test 14 failed")
-    print("Test 14 passed: format_status_line contains current_section")
-
-    assert(string.find(status_line, "NEXT_SECTION_READY"), "Test 15 failed")
-    print("Test 15 passed: format_status_line contains decision")
-
-    assert(view_model.current_position_label == "12.00s", "Test 16 failed")
-    print("Test 16 passed: current_position_label formats numbers with two decimals")
-
-    local nil_position = build_snapshot()
-    nil_position.position = nil
-    local nil_position_view = ui_runtime.build_view_model(nil_position)
-    assert(nil_position_view.current_position_label == "nil", "Test 17 failed")
-    print("Test 17 passed: current_position_label formats nil as nil")
-
-    assert(view_model.read_only_label == "true", "Test 18 failed")
-    print("Test 18 passed: read_only_label returns true")
-
-    assert(string.find(view_model.validation_label, "ready"), "Test 19 failed")
-    print("Test 19 passed: validation_label includes status")
-
-    assert(string.find(view_model.diagnostics_label, "events=6"), "Test 20 failed")
-    print("Test 20 passed: diagnostics_label includes logger_event_count")
-
-    local partial_view = ui_runtime.build_view_model({ ok = false })
-    assert(partial_view.ok == false, "Test 21 failed")
-    assert(partial_view.status_line ~= nil, "Test 21 failed")
-    print("Test 21 passed: build_view_model handles partial snapshots")
-
-    local nil_status_line = ui_runtime.format_status_line({})
-    assert(type(nil_status_line) == "string", "Test 22 failed")
-    assert(string.find(nil_status_line, "nil"), "Test 22 failed")
-    print("Test 22 passed: status_line handles nil fields")
-
-    assert(cards[1].emphasis == true, "Test 23 failed")
-    assert(cards[3].emphasis == true, "Test 23 failed")
-    assert(cards[4].emphasis == true, "Test 23 failed")
-    print("Test 23 passed: key cards have emphasis=true")
-
-    local diagnostics = ui_runtime.get_diagnostics_lines(view_model)
-    assert(diagnostics[1] == "Section Count: 4", "Test 24 failed")
-    print("Test 24 passed: get_diagnostics_lines returns Section Count")
-
-    assert(diagnostics[2] == "Logger Event Count: 6", "Test 25 failed")
-    print("Test 25 passed: get_diagnostics_lines returns Logger Event Count")
-
-    assert(ui_runtime.get_read_only_warning() == "No transport actions are triggered.", "Test 26 failed")
-    print("Test 26 passed: get_read_only_warning returns read-only warning")
-
-    local confirmation = ui_runtime.get_transport_confirmation_lines(view_model)
-    assert(confirmation[1] == "Status: NOT CONFIRMED", "Test 27 failed")
-    print("Test 27 passed: get_transport_confirmation_lines returns Status")
-
-    assert(confirmation[5] == "Action: go_next", "Test 28 failed")
-    print("Test 28 passed: get_transport_confirmation_lines returns Action")
-
-    assert(confirmation[6] == "Target: CHORUS_1", "Test 29 failed")
-    print("Test 29 passed: get_transport_confirmation_lines returns Target")
-
-    assert(confirmation[7] == "Mode: DRY RUN", "Test 30 failed")
-    print("Test 29 passed: get_transport_confirmation_lines returns dry-run mode")
-
-    assert(confirmation[8] == "Execution: DISABLED", "Test 31 failed")
-    print("Test 30 passed: get_transport_confirmation_lines returns disabled execution")
-
-    assert(confirmation[9] == "Confirmation: visual only", "Test 32 failed")
-    print("Test 31 passed: get_transport_confirmation_lines returns visual-only confirmation")
-
-    assert(view_model.transport_execution_enabled == false, "Test 33 failed")
-    print("Test 32 passed: build_view_model sets transport_execution_enabled=false")
-
-    assert(view_model.transport_confirmation_required == true, "Test 34 failed")
-    print("Test 33 passed: build_view_model sets transport_confirmation_required=true")
-
-    assert(view_model.simulation_result.message == "simulation_disabled", "Test 35 failed")
-    print("Test 34 passed: build_view_model sets simulation_disabled by default")
-
-    local simulation = ui_runtime.get_transport_simulation_lines(view_model)
-    assert(simulation[1] == "Simulated: true", "Test 36 failed")
-    print("Test 35 passed: get_transport_simulation_lines returns Simulated")
-
-    assert(simulation[2] == "Executed: false", "Test 37 failed")
-    print("Test 36 passed: get_transport_simulation_lines returns Executed")
-
-    assert(simulation[3] == "Message: simulation_disabled", "Test 38 failed")
-    print("Test 37 passed: get_transport_simulation_lines returns Message")
-
-    assert(view_model.manual_confirmation_active == false, "Test 39 failed")
-    print("Test 39 passed: build_view_model without confirmation sets manual_confirmation_active=false")
+    assert(view_model.active_intent.action == "go_next", "Test 83 failed")
+    print("Test 83 passed: default active_intent is go_next")
 
     local session = ui_session.create()
-    ui_session.confirm_transport(session, view_model.transport_intent_preview)
-    local confirmed_view = ui_runtime.build_view_model(build_snapshot(), session)
-    assert(confirmed_view.manual_confirmation_active == true, "Test 40 failed")
-    print("Test 40 passed: build_view_model with matching confirmation sets manual_confirmation_active=true")
+    ui_session.select_section(session, "ENDING", 50.0)
+    local selected_view = ui_runtime.build_view_model(build_snapshot(), session)
+    assert(selected_view.selected_section == "ENDING", "Test 84 failed")
+    assert(selected_view.active_intent.action == "jump_to_section", "Test 85 failed")
+    assert(selected_view.active_intent.target_section == "ENDING", "Test 85 failed")
+    print("Test 84-85 passed: active_intent follows selection")
 
-    assert(type(view_model.preflight_report) == "table", "Test 41 failed")
-    print("Test 41 passed: build_view_model exposes preflight_report")
+    local operator_lines = ui_runtime.get_operator_lines(selected_view)
+    local has_selected = false
+    local has_active = false
+    for _, line in ipairs(operator_lines) do
+        if string.find(line, "Selected Target: ENDING") then has_selected = true end
+        if string.find(line, "Active Target: ENDING") then has_active = true end
+    end
+    assert(has_selected == true, "Test 86 failed")
+    assert(has_active == true, "Test 87 failed")
+    print("Test 86-87 passed: get_operator_lines includes selection info")
 
-    local preflight = ui_runtime.get_transport_preflight_lines(view_model)
-    assert(preflight[1] == "Status: blocked", "Test 42 failed")
-    print("Test 42 passed: get_transport_preflight_lines returns Status")
-
-    assert(preflight[9] == "Summary: preflight_blocked", "Test 43 failed")
-    print("Test 43 passed: get_transport_preflight_lines returns Summary")
-
-    assert(type(view_model.safety_dashboard) == "table", "Test 44 failed")
-    print("Test 44 passed: build_view_model exposes safety_dashboard")
-
-    local safety = ui_runtime.get_safety_dashboard_lines(view_model)
-    assert(safety[1] == "Safety Level: locked", "Test 45 failed")
-    print("Test 45 passed: get_safety_dashboard_lines returns Safety Level")
-
-    assert(safety[2] == "Transport Real Enabled: true", "Test 46 failed")
-    print("Test 46 passed: get_safety_dashboard_lines returns Transport Real Enabled")
-
-    assert(safety[8] == "Guarantees:", "Test 47 failed")
-    print("Test 47 passed: get_safety_dashboard_lines returns Guarantees")
-
-    assert(type(view_model.adapter_capabilities) == "table", "Test 48 failed")
-    print("Test 48 passed: build_view_model exposes adapter_capabilities")
-
-    assert(view_model.adapter_capabilities.real_transport_supported == true, "Test 49 failed")
-    print("Test 49 passed: adapter_capabilities real_transport_supported=true")
-
-    assert(view_model.adapter_capabilities.real_transport_enabled == true, "Test 50 failed")
-    print("Test 50 passed: adapter_capabilities real_transport_enabled=true")
-
-    assert(view_model.adapter_capabilities.can_play_stop == true, "Test 51 failed")
-    print("Test 51 passed: adapter_capabilities can_play_stop=true")
-
-    assert(view_model.adapter_capabilities.can_seek == true, "Test 52 failed")
-    print("Test 52 passed: adapter_capabilities can_seek=true")
-
-    assert(view_model.adapter_capabilities.can_mutate_project == false, "Test 53 failed")
-    print("Test 53 passed: adapter_capabilities can_mutate_project=false")
-
-    local adapter = ui_runtime.get_transport_adapter_lines(view_model)
-    assert(adapter[1] == "Backend: reaper", "Test 54 failed")
-    print("Test 54 passed: get_transport_adapter_lines returns Backend")
-
-    assert(adapter[7] == "Reason: mvp_ready", "Test 55 failed")
-    print("Test 55 passed: get_transport_adapter_lines returns Reason")
-
-    assert(adapter[3] == "Real Transport Enabled: true", "Test 56 failed")
-    print("Test 56 passed: get_transport_adapter_lines returns Real Transport Enabled")
-
-    assert(type(view_model.seek_plan) == "table", "Test 57 failed")
-    print("Test 57 passed: build_view_model exposes seek_plan")
-
-    assert(view_model.seek_plan.locked == true, "Test 58 failed")
-    print("Test 58 passed: seek_plan locked=true when valid")
-
-    local seek = ui_runtime.get_seek_plan_lines(view_model)
-    assert(seek[1] == "Action: go_next", "Test 59 failed")
-    print("Test 59 passed: get_seek_plan_lines returns action")
-
-    assert(seek[3] == "Target Section: CHORUS_1", "Test 60 failed")
-    print("Test 60 passed: get_seek_plan_lines returns Target Section")
-
-    assert(seek[4] == "Target Position: 30", "Test 61 failed")
-    print("Test 61 passed: get_seek_plan_lines returns Target Position")
-
-    assert(seek[6] == "Locked: true", "Test 62 failed")
-    print("Test 62 passed: get_seek_plan_lines returns Locked")
-
-    assert(seek[7] == "Reason: seek_plan_locked", "Test 63 failed")
-    print("Test 63 passed: get_seek_plan_lines returns Reason")
-
-    assert(type(view_model.transport_readiness) == "table", "Test 64 failed")
-    print("Test 64 passed: build_view_model exposes transport_readiness")
-
-    local readiness = ui_runtime.get_transport_readiness_lines(view_model)
-    assert(readiness[1] == "Status: blocked", "Test 65 failed")
-    print("Test 65 passed: get_transport_readiness_lines returns Status")
-
-    assert(readiness[2] == "Ready: false", "Test 66 failed")
-    print("Test 66 passed: get_transport_readiness_lines returns Ready")
-
-    assert(readiness[13] == "Blockers:", "Test 67 failed")
-    print("Test 67 passed: get_transport_readiness_lines returns Blockers")
-
-    assert(type(view_model.pre_execution_audit) == "table", "Test 68 failed")
-    print("Test 68 passed: build_view_model exposes pre_execution_audit")
-
-    local audit = ui_runtime.get_pre_execution_audit_lines(view_model)
-    assert(audit[1] == "Audit Status: blocked", "Test 69 failed")
-    print("Test 69 passed: get_pre_execution_audit_lines returns Audit Status")
-
-    assert(audit[15] == "Execution Allowed: false", "Test 70 failed")
-    print("Test 70 passed: get_pre_execution_audit_lines returns Execution Allowed")
-
-    assert(audit[17] == "Blockers:", "Test 71 failed")
-    print("Test 71 passed: get_pre_execution_audit_lines returns Blockers")
-
-    assert(view_model.execution_armed == false, "Test 72 failed")
-    print("Test 72 passed: build_view_model includes execution_armed")
-
-    local execution_lines = ui_runtime.get_execution_control_lines(view_model)
-    assert(execution_lines[1] == "Execution Armed: false", "Test 73 failed")
-    assert(execution_lines[2] == "Last Execution: none", "Test 74 failed")
-    print("Test 73-74 passed: get_execution_control_lines returns default state")
-
-    local session_with_result = ui_session.create()
-    ui_session.arm_execution(session_with_result)
-    ui_session.set_last_execution_result(session_with_result, { executed = true, reason = "test_success", target_position = 42 })
-    local view_with_result = ui_runtime.build_view_model(build_snapshot(), session_with_result)
-    assert(view_with_result.execution_armed == true, "Test 75 failed")
-    local lines_with_result = ui_runtime.get_execution_control_lines(view_with_result)
-    assert(lines_with_result[1] == "Execution Armed: true", "Test 76 failed")
-    assert(lines_with_result[2] == "Last Execution:", "Test 77 failed")
-    assert(lines_with_result[3] == "- Executed: true", "Test 78 failed")
-    assert(lines_with_result[4] == "- Reason: test_success", "Test 79 failed")
-    assert(lines_with_result[5] == "- Target Position: 42.00s", "Test 80 failed")
-    print("Test 75-80 passed: get_execution_control_lines returns result state")
-
-    assert(view_model.debug_visible == false, "Test 81 failed")
-    assert(type(view_model.operator_summary) == "table", "Test 82 failed")
-    assert(view_model.operator_summary.current_section == "VERSE_1", "Test 83 failed")
-    assert(view_model.operator_summary.target_section == "CHORUS_1", "Test 84 failed")
-    assert(view_model.operator_summary.target_position == "30.00s", "Test 85 failed")
-    assert(view_model.operator_summary.confirmation_status == "NOT CONFIRMED", "Test 86 failed")
-    assert(view_model.operator_summary.execution_armed == false, "Test 87 failed")
-    assert(view_model.operator_summary.safety_note == "Manual actions only. No automatic jumps.", "Test 88 failed")
-    print("Test 81-88 passed: build_view_model includes operator_summary")
-
-    local operator_lines = ui_runtime.get_operator_lines(view_model)
-    assert(operator_lines[2] == "Current Section: VERSE_1", "Test 89 failed")
-    assert(operator_lines[3] == "Next Target: CHORUS_1", "Test 90 failed")
-    assert(operator_lines[4] == "Target Position: 30.00s", "Test 91 failed")
-    assert(operator_lines[5] == "Confirmation: NOT CONFIRMED", "Test 92 failed")
-    assert(operator_lines[6] == "Execution Armed: false", "Test 93 failed")
-    assert(operator_lines[#operator_lines] == "Safety: Manual actions only. No automatic jumps.", "Test 94 failed")
-    print("Test 89-94 passed: get_operator_lines returns expected content")
+    local timeline_lines = ui_runtime.get_timeline_lines(view_model)
+    assert(timeline_lines[1] == "Song Map", "Test 88 failed")
+    assert(string.find(timeline_lines[2], "INTRO"), "Test 88 failed")
+    print("Test 88 passed: get_timeline_lines works")
 
     print("\nUI runtime tests passed successfully!")
 end

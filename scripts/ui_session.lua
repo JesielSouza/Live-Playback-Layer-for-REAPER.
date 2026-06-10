@@ -12,9 +12,15 @@ local function apply_defaults(session)
     session.confirmed_target_section = nil
     session.confirmation_count = 0
     session.execution_armed = false
-    session.debug_visible = false
     session.last_execution_result = nil
     session.last_operator_action = nil
+    session.debug_visible = false
+    
+    -- v0.2 Selection state
+    session.selected_section = nil
+    session.selected_target_position = nil
+    session.selected_action = nil
+    
     return session
 end
 
@@ -48,6 +54,10 @@ function UISession.clear_transport_confirmation(session)
     session.confirmed_target_section = nil
     session.confirmation_count = session.confirmation_count or 0
     session.execution_armed = false
+    -- Manual clear also clears selection
+    session.selected_section = nil
+    session.selected_target_position = nil
+    session.selected_action = nil
     return session
 end
 
@@ -122,6 +132,45 @@ function UISession.set_last_operator_action(session, action)
     return session
 end
 
+-- v0.2 Selection functions
+function UISession.select_section(session, section_id, target_position)
+    session = session or UISession.create()
+    
+    -- Se mudar a seleção, invalida a confirmação anterior
+    if session.selected_section ~= section_id then
+        session.transport_confirmed = false
+        session.confirmed_action = nil
+        session.confirmed_target_section = nil
+    end
+    
+    session.selected_section = section_id
+    session.selected_target_position = target_position
+    session.selected_action = "jump_to_section"
+    return session
+end
+
+function UISession.clear_selected_section(session)
+    session = session or UISession.create()
+    session.selected_section = nil
+    session.selected_target_position = nil
+    session.selected_action = nil
+    return session
+end
+
+function UISession.get_selected_section(session)
+    if type(session) ~= "table" then return nil end
+    return session.selected_section
+end
+
+function UISession.is_section_selected(session, section_id)
+    if type(session) ~= "table" then return false end
+    return session.selected_section == section_id
+end
+
+function UISession.confirm_selected_section(session, intent)
+    return UISession.confirm_transport(session, intent)
+end
+
 function UISession.get_state(session)
     session = session or {}
 
@@ -133,7 +182,10 @@ function UISession.get_state(session)
         execution_armed = session.execution_armed == true,
         debug_visible = session.debug_visible == true,
         last_execution_result = session.last_execution_result,
-        last_operator_action = session.last_operator_action
+        last_operator_action = session.last_operator_action,
+        selected_section = session.selected_section,
+        selected_target_position = session.selected_target_position,
+        selected_action = session.selected_action
     }
 end
 

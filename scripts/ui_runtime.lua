@@ -12,6 +12,8 @@ local TransportReadiness = require("scripts.transport_readiness")
 local PreExecutionAudit = require("scripts.pre_execution_audit")
 local SafetyDashboard = require("scripts.safety_dashboard")
 local UISession = require("scripts.ui_session")
+local SongMap = require("scripts.song_map")
+local UITimeline = require("scripts.ui_timeline")
 
 local function text_or_nil(value)
     if value == nil then
@@ -93,6 +95,13 @@ function UIRuntime.build_view_model(snapshot, ui_session)
     local adapter_capabilities = TransportAdapter.get_capabilities({})
     local session_state = UISession.get_state(ui_session)
     local playback_status = TransportControl.get_playback_status({})
+    local song_map = SongMap.build(snapshot)
+    
+    -- Selection logic
+    if session_state.selected_section then
+        SongMap.select_section(song_map, session_state.selected_section)
+    end
+    local timeline = UITimeline.build(song_map, {})
 
     if type(snapshot) ~= "table" then
         local transport_gate_result = TransportGate.evaluate(nil, nil)
@@ -174,6 +183,8 @@ function UIRuntime.build_view_model(snapshot, ui_session)
             last_execution_result = session_state.last_execution_result,
             debug_visible = session_state.debug_visible,
             playback_status = playback_status,
+            song_map = song_map,
+            timeline = timeline,
             operator_summary = {
                 playback = playback_state_label(playback_status),
                 current_section = "nil",
@@ -193,20 +204,28 @@ function UIRuntime.build_view_model(snapshot, ui_session)
     end
 
     local transport_intent = TransportControl.build_intent("go_next", snapshot, { dry_run = true })
-    local loop_current_intent = TransportControl.build_intent("loop_current", snapshot, { dry_run = true })
-    local manual_confirmed = UISession.is_transport_confirmed(ui_session, transport_intent)
-    local transport_gate_result = TransportGate.evaluate(transport_intent, snapshot, {
+    local loop_current_intent = TransportControl.build_loop_current_intent(snapshot)
+    
+    local manual_section_intent = nil
+    if session_state.selected_section then
+        manual_section_intent = TransportControl.build_manual_section_intent(snapshot, session_state.selected_section)
+    end
+    
+    local active_intent = manual_section_intent or transport_intent
+    
+    local manual_confirmed = UISession.is_transport_confirmed(ui_session, active_intent)
+    local transport_gate_result = TransportGate.evaluate(active_intent, snapshot, {
         enable_transport = false,
         require_manual_confirmation = true,
         manual_confirmed = manual_confirmed,
         allow_project_mutation = false
     })
-    local simulation_result = TransportControl.simulate_intent(transport_intent, snapshot, {
+    local simulation_result = TransportControl.simulate_intent(active_intent, snapshot, {
         enabled = false,
         manual_confirmed = manual_confirmed
     })
     local preflight_report = TransportPreflight.build_report(
-        transport_intent,
+        active_intent,
         transport_gate_result,
         simulation_result,
         session_state
@@ -217,7 +236,7 @@ function UIRuntime.build_view_model(snapshot, ui_session)
         simulation_result,
         session_state
     )
-    local seek_plan = TransportControl.build_seek_plan(transport_intent, snapshot, {})
+    local seek_plan = TransportControl.build_seek_plan(active_intent, snapshot, {})
     local transport_readiness = TransportReadiness.build({
         adapter_capabilities = adapter_capabilities,
         gate_result = transport_gate_result,
@@ -228,7 +247,7 @@ function UIRuntime.build_view_model(snapshot, ui_session)
     })
     local pre_execution_audit = PreExecutionAudit.build({
         runtime_snapshot = snapshot,
-        intent = transport_intent,
+        intent = active_intent,
         ui_session_state = session_state,
         gate_result = transport_gate_result,
         simulation_result = simulation_result,
@@ -260,6 +279,8 @@ function UIRuntime.build_view_model(snapshot, ui_session)
         diagnostics_label = "",
         transport_intent_preview = transport_intent,
         loop_current_intent = loop_current_intent,
+        manual_section_intent = manual_section_intent,
+        active_intent = active_intent,
         transport_intent_label = "",
         transport_confirmation_label = "Manual Confirmation",
         transport_execution_enabled = false,
@@ -280,10 +301,15 @@ function UIRuntime.build_view_model(snapshot, ui_session)
         last_execution_result = session_state.last_execution_result,
         debug_visible = session_state.debug_visible,
         playback_status = playback_status,
+        song_map = song_map,
+        timeline = timeline,
+        selected_section = session_state.selected_section,
         operator_summary = {
             playback = playback_state_label(playback_status),
             current_section = text_or_nil(snapshot.current_section),
-            target_section = text_or_nil(transport_intent.target_section),
+            next_target = text_or_nil(transport_intent.target_section),
+            selected_target = text_or_nil(session_state.selected_section),
+            active_target = text_or_nil(active_intent.target_section),
             target_position = position_label(seek_plan.target_position),
             confirmation_status = manual_confirmed and "CONFIRMED" or "NOT CONFIRMED",
             execution_armed = session_state.execution_armed == true,
@@ -364,7 +390,9 @@ function UIRuntime.get_operator_lines(view_model)
     local lines = {
         "Playback: " .. tostring(summary.playback or "unknown"),
         "Current Section: " .. tostring(summary.current_section or "nil"),
-        "Next Target: " .. tostring(summary.target_section or "nil"),
+        "Next Target: " .. tostring(summary.next_target or "nil"),
+        "Selected Target: " .. tostring(summary.selected_target or "none"),
+        "Active Target: " .. tostring(summary.active_target or "nil"),
         "Target Position: " .. tostring(summary.target_position or "nil"),
         "Confirmation: " .. tostring(summary.confirmation_status or "NOT CONFIRMED"),
         "Execution Armed: " .. bool_label(summary.execution_armed == true)
@@ -377,6 +405,22 @@ function UIRuntime.get_operator_lines(view_model)
 
     table.insert(lines, "Safety: " .. tostring(summary.safety_note or "Manual actions only. No automatic jumps."))
 
+    return lines
+end
+
+function UIRuntime.get_timeline_lines(view_model)
+    view_model = view_model or {}
+    local timeline = view_model.timeline or {}
+    local lines = { "Song Map" }
+    
+    for _, block in ipairs(UITimeline.get_blocks(timeline)) do
+        local range = ""
+        if block.start and block.end_pos then
+            range = string.format(" %.1f-%.1f", block.start, block.end_pos)
+        end
+        table.insert(lines, UITimeline.format_block(block) .. range)
+    end
+    
     return lines
 end
 
@@ -548,7 +592,7 @@ function UIRuntime.get_pre_execution_audit_lines(view_model)
         "Manual Confirmed: " .. bool_label(audit.manual_confirmed == true),
         "Gate Reason: " .. text_or_nil(audit.gate_reason),
         "Simulation Message: " .. text_or_nil(audit.simulation_message),
-        "Preflight Status: " .. text_or_nil(audit.preflight_status),
+        "Preflight Status: " .. text_or_nil(snapshot and snapshot.preflight_status or "nil"),
         "Safety Level: " .. text_or_nil(audit.safety_level),
         "Adapter Locked: " .. bool_label(audit.adapter_locked == true),
         "Seek Locked: " .. bool_label(audit.seek_locked == true),

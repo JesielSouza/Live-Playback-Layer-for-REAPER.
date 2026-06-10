@@ -2,39 +2,44 @@
 
 ## Design Principles
 
-1.  **Safety-First**: The system must never take an action that wasn't explicitly confirmed by the operator.
-2.  **Read-Only Runtime**: The UI logic works with a "Snapshot" of the project, never calling REAPER APIs directly to mutate state during render loops.
-3.  **Explicit Transport**: All mutations happen in the **Transport Adapter**, which acts as a controlled gatekeeper for REAPER APIs.
-4.  **No `Main_OnCommand`**: We avoid using generic command triggers to ensure predictable behavior and avoid interference with user keybindings.
+1.  **Safety-First**: The system never takes an action without explicit operator confirmation.
+2.  **Read-Only Runtime**: UI logic works with a "Snapshot", avoiding direct API calls during render.
+3.  **Explicit Transport**: Mutations are centralizad in the **Transport Adapter**.
+4.  **Operator Focus**: UI is designed for live use (Sprint v0.2).
 
 ## Core Components
 
 ### 1. Runtime (`scripts/runtime.lua`)
-Builds a complete, read-only snapshot of the current REAPER state (cursor position, play state, regions, etc.).
+Builds a complete, read-only snapshot of the current REAPER state.
 
-### 2. Transport Control (`scripts/transport_control.lua`)
-Analyzes the snapshot and build "Intents" (e.g., "Go to Next Section"). It uses the **Transport Simulator** and **Safety Gate** to determine if an action is safe and valid.
+### 2. Song Map (`scripts/song_map.lua`)
+Normalizes song sections from various project sources (Regions). It handles state for current, next, and manually selected sections.
 
-### 3. Transport Adapter (`scripts/transport_adapter.lua`)
-The only module allowed to call "Real" REAPER transport APIs. It implements a strict whitelist:
-- `SetEditCurPos(pos, moveview, seekplay)`: For cursor moves and seeks.
-- `OnPlayButton()`: For manual playback start.
-- `OnStopButton()`: For manual playback stop.
-- `GetPlayState()` / `GetPlayPosition()`: For status monitoring.
+### 3. UI Timeline (`scripts/ui_timeline.lua`)
+A pure model that prepares the Song Map for visual rendering, determining block states and weights.
 
-### 4. UI Session (`scripts/ui_session.lua`)
-Manages in-memory UI state that isn't stored in REAPER, such as "Is the current intent confirmed?" and "Is execution armed?".
+### 4. Transport Control (`scripts/transport_control.lua`)
+The dispatcher for operational intents. It builds intents (automatic next, manual selection, loop) and delegates execution to the adapter.
 
-### 5. Reaper UI (`scripts/reaper_ui.lua`)
-The ReaImGui-based interface. It has two modes:
-- **Operator Mode**: Simplified view for live use.
-- **Debug Mode**: Technical view for diagnostics and audit.
+### 5. Transport Adapter (`scripts/transport_adapter.lua`)
+The only module allowed to call "Real" REAPER transport APIs:
+- `SetEditCurPos`
+- `OnPlayButton()` / `OnStopButton()`
+- `GetPlayState()` / `GetPlayPosition()`
 
-## Execution Flow
+### 6. UI Session (`scripts/ui_session.lua`)
+Manages transient UI state (confirmations, arming, manual selection).
 
-1.  **Build Snapshot**: Every frame, the system reads REAPER state.
-2.  **Evaluate Intent**: The system determines the logical "Next Section".
-3.  **Confirm**: The user clicks "Confirm Intent".
-4.  **Arm**: The user clicks "Arm".
-5.  **Execute**: The user clicks a transport button (Move/Seek/Play).
-6.  **Disarm**: The session automatically disarms after execution.
+### 7. Reaper UI (`scripts/reaper_ui.lua`)
+The ReaImGui-based interface.
+- **Operator Mode**: Main panel with Song Map and transport buttons.
+- **Debug Mode**: Hidden technical diagnostic data.
+
+## Workflow v0.2
+
+1.  **Snap**: Read REAPER state.
+2.  **Map**: Build Song Map and UI Timeline.
+3.  **Select**: User can click a block to select a manual target.
+4.  **Intent**: System evaluates the "Active Target" (Selection > Next).
+5.  **Confirm & Arm**: Explicit workflow for safety.
+6.  **Execute**: Trigger transport action.

@@ -1,52 +1,45 @@
-# Manual Test Checklist: MVP Operations
+# Manual Test Checklist: Sprint v0.2 Visuals
 
-This checklist ensures the Live Playback Layer works correctly inside REAPER.
+This checklist ensures the v0.2 features work correctly inside REAPER.
 
-## 1. UI Initialization
-- [ ] Open `reaper_ui.lua`.
-- [ ] UI shows "Operator Panel".
-- [ ] Debug sections are hidden.
-- [ ] Playback status correctly shows "stopped" if not playing.
+## 1. Song Map Rendering
+- [ ] UI shows "Song Map" section.
+- [ ] Sections are rendered as blocks (Buttons).
+- [ ] Each block shows the correct Region name.
+- [ ] The current section has a `> ` prefix.
+- [ ] The automatic next section has a `>> ` prefix.
 
-## 2. Intent Confirmation
-- [ ] Place cursor in a section (e.g., VERSE_1).
-- [ ] UI shows "Next Target" correctly (e.g., CHORUS_1).
+## 2. Manual Selection
+- [ ] Click on any non-current block.
+- [ ] The clicked block gets a `* ` prefix.
+- [ ] Operator Panel shows "Selected Target: [name]".
+- [ ] Operator Panel shows "Active Target: [name]" matching your selection.
+- [ ] "Confirmation" status is "NOT CONFIRMED".
+
+## 3. Workflow with Selection
+- [ ] Select a section.
 - [ ] Click "Confirm Intent".
 - [ ] "Confirmation" status changes to "CONFIRMED".
-- [ ] Move cursor to another section; "Confirmation" should revert to "NOT CONFIRMED".
-
-## 3. Cursor Movement (Stopped)
-- [ ] Place cursor in VERSE_1.
-- [ ] Click "Confirm Intent".
-- [ ] Click "Arm".
-- [ ] Click "Move Cursor".
-- [ ] REAPER cursor should move to CHORUS_1.
-- [ ] Execution Armed should revert to `false`.
-- [ ] Last Execution should show `cursor_move_executed`.
-
-## 4. Seek/Jump (During Playback)
-- [ ] Start playback in REAPER.
-- [ ] Click "Confirm Intent" for next section.
 - [ ] Click "Arm".
 - [ ] Click "Jump/Seek Now".
-- [ ] REAPER playback should immediately jump to the target section.
-- [ ] Execution Armed should revert to `false`.
-- [ ] Last Execution should show `seek_executed`.
+- [ ] REAPER jumps to the selected section.
+- [ ] Confirmation and Arming are reset.
 
-## 5. Loop Current
-- [ ] While playing a section, click "Arm".
-- [ ] Click "Loop Current".
-- [ ] REAPER playback should jump back to the start of the current section.
+## 4. Clear Selection
+- [ ] Select a section.
+- [ ] Click "Clear".
+- [ ] `* ` prefix disappears from the block.
+- [ ] "Selected Target" becomes "none".
+- [ ] "Active Target" reverts to the automatic next section.
 
-## 6. Manual Transport
-- [ ] Click "Arm".
-- [ ] Click "Play".
-- [ ] REAPER should start playing.
-- [ ] Click "Stop".
-- [ ] REAPER should stop (Panic Stop). Note: "Stop" does not require arming.
+## 5. Playback States
+- [ ] Start Playback: UI shows "PLAYBACK: PLAYING".
+- [ ] Pause Playback: UI shows "PLAYBACK: PAUSED".
+- [ ] Stop Playback: UI shows "PLAYBACK: STOPPED".
 
-## 7. Safety Audits
-- [ ] Confirm no automatic jumps happen at region boundaries.
-- [ ] Confirm no markers or regions are created or deleted.
-- [ ] Confirm `Main_OnCommand` is not triggered (no unexpected actions).
-- [ ] Toggle "Show Debug" and confirm technical data is accurate.
+## 6. Safety Audits
+- [ ] Selecting a section does NOT move the cursor or start playback.
+- [ ] Confirming does NOT move the cursor or start playback.
+- [ ] Arming does NOT move the cursor or start playback.
+- [ ] No markers or regions are created or deleted.
+- [ ] `Main_OnCommand` is not triggered.

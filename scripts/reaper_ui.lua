@@ -107,6 +107,33 @@ local function loop()
         ImGui.Text(ctx, "Live Playback Layer")
 
         if snapshot_ok and view_model then
+            local summary = view_model.operator_summary or {}
+            
+            -- Playback Status (Grande)
+            render_separator()
+            ImGui.Text(ctx, "PLAYBACK: " .. string.upper(summary.playback or "UNKNOWN"))
+            
+            -- Visual Timeline / Song Map
+            render_separator()
+            ImGui.Text(ctx, "Song Map")
+            local blocks = view_model.timeline and view_model.timeline.blocks or {}
+            for i, block in ipairs(blocks) do
+                local prefix = ""
+                if block.is_current then prefix = "> "
+                elseif block.is_next then prefix = ">> "
+                elseif block.is_selected then prefix = "* "
+                elseif block.is_loop then prefix = "@ "
+                end
+                
+                local label = prefix .. block.label
+                if ImGui.Button(ctx, label .. "##" .. i) then
+                    UISession.select_section(ui_session, block.id, block.start)
+                end
+                if i < #blocks then
+                    ImGui.SameLine(ctx)
+                end
+            end
+
             render_separator()
             ImGui.Text(ctx, "Operator Panel")
             for _, line in ipairs(UIRuntime.get_operator_lines(view_model)) do
@@ -115,7 +142,7 @@ local function loop()
 
             -- Botões Principais
             if ImGui.Button(ctx, "Confirm Intent") then
-                UISession.confirm_transport(ui_session, view_model.transport_intent_preview)
+                UISession.confirm_transport(ui_session, view_model.active_intent)
             end
             ImGui.SameLine(ctx)
             if ImGui.Button(ctx, "Arm") then
@@ -125,18 +152,19 @@ local function loop()
             if ImGui.Button(ctx, "Clear") then
                 UISession.clear_transport_confirmation(ui_session)
                 UISession.disarm_execution(ui_session)
+                UISession.clear_selected_section(ui_session)
             end
 
             if ImGui.Button(ctx, "Move Cursor") then
                 local result = TransportControl.execute_real_intent(
-                    view_model.transport_intent_preview,
+                    view_model.active_intent,
                     snapshot,
                     view_model.transport_gate_result,
                     {
                         enable_real_cursor_move = true,
                         enable_real_seek = false,
                         execution_armed = UISession.is_execution_armed(ui_session),
-                        manual_confirmed = UISession.is_transport_confirmed(ui_session, view_model.transport_intent_preview),
+                        manual_confirmed = UISession.is_transport_confirmed(ui_session, view_model.active_intent),
                         seekplay = false
                     }
                 )
@@ -146,14 +174,14 @@ local function loop()
             ImGui.SameLine(ctx)
             if ImGui.Button(ctx, "Jump/Seek Now") then
                 local result = TransportControl.execute_real_intent(
-                    view_model.transport_intent_preview,
+                    view_model.active_intent,
                     snapshot,
                     view_model.transport_gate_result,
                     {
                         enable_real_cursor_move = false,
                         enable_real_seek = true,
                         execution_armed = UISession.is_execution_armed(ui_session),
-                        manual_confirmed = UISession.is_transport_confirmed(ui_session, view_model.transport_intent_preview),
+                        manual_confirmed = UISession.is_transport_confirmed(ui_session, view_model.active_intent),
                         seekplay = true
                     }
                 )
@@ -162,9 +190,7 @@ local function loop()
             end
             ImGui.SameLine(ctx)
             if ImGui.Button(ctx, "Loop Current") then
-                -- Build loop intent for current section
                 local loop_intent = TransportControl.build_loop_current_intent(snapshot)
-                -- Confirm it temporarily for execution
                 UISession.confirm_transport(ui_session, loop_intent)
                 
                 local result = TransportControl.execute_real_intent(
@@ -175,7 +201,7 @@ local function loop()
                         enable_real_cursor_move = false,
                         enable_real_seek = true,
                         execution_armed = UISession.is_execution_armed(ui_session),
-                        manual_confirmed = true, -- Auto confirmed for loop current if armed
+                        manual_confirmed = true,
                         seekplay = true
                     }
                 )
@@ -235,41 +261,7 @@ local function loop()
                 for _, line in ipairs(UIRuntime.get_transport_confirmation_lines(view_model)) do
                     ImGui.Text(ctx, line)
                 end
-                if ImGui.Button(ctx, "Confirm Intent (dry-run)") then
-                    UISession.confirm_transport(ui_session, view_model.transport_intent_preview)
-                end
-                if ImGui.Button(ctx, "Clear Confirmation") then
-                    UISession.clear_transport_confirmation(ui_session)
-                end
-
-                render_separator()
-                ImGui.Text(ctx, "Cursor Move Control")
-                for _, line in ipairs(UIRuntime.get_execution_control_lines(view_model)) do
-                    ImGui.Text(ctx, line)
-                end
-                if ImGui.Button(ctx, "Arm Cursor Move (debug)") then
-                    UISession.arm_execution(ui_session)
-                end
-                ImGui.SameLine(ctx)
-                if ImGui.Button(ctx, "Disarm (debug)") then
-                    UISession.disarm_execution(ui_session)
-                end
-
-                if ImGui.Button(ctx, "Move Cursor to Target Section (debug)") then
-                    local result = TransportControl.execute_real_intent(
-                        view_model.transport_intent_preview,
-                        snapshot,
-                        view_model.transport_gate_result,
-                        {
-                            enable_real_cursor_move = true,
-                            execution_armed = UISession.is_execution_armed(ui_session),
-                            manual_confirmed = UISession.is_transport_confirmed(ui_session, view_model.transport_intent_preview)
-                        }
-                    )
-                    UISession.set_last_execution_result(ui_session, result)
-                    UISession.disarm_execution(ui_session)
-                end
-
+                
                 render_separator()
                 ImGui.Text(ctx, "Transport Gate")
                 for _, line in ipairs(UIRuntime.get_transport_gate_lines(view_model)) do
