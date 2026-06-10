@@ -6,6 +6,7 @@
 local UIRuntime = {}
 local TransportControl = require("scripts.transport_control")
 local TransportGate = require("scripts.transport_gate")
+local TransportPreflight = require("scripts.transport_preflight")
 local UISession = require("scripts.ui_session")
 
 local function text_or_nil(value)
@@ -113,6 +114,15 @@ function UIRuntime.build_view_model(snapshot, ui_session)
                 enabled = false,
                 manual_confirmed = false
             }),
+            preflight_report = TransportPreflight.build_report(
+                nil,
+                TransportGate.evaluate(nil, nil),
+                TransportControl.simulate_intent(nil, nil, {
+                    enabled = false,
+                    manual_confirmed = false
+                }),
+                session_state
+            ),
             warnings = {},
             errors = { "missing_snapshot" }
         }
@@ -133,6 +143,12 @@ function UIRuntime.build_view_model(snapshot, ui_session)
         enabled = false,
         manual_confirmed = manual_confirmed
     })
+    local preflight_report = TransportPreflight.build_report(
+        transport_intent,
+        transport_gate_result,
+        simulation_result,
+        session_state
+    )
     local view_model = {
         ok = snapshot.ok == true,
         read_only = true,
@@ -164,6 +180,7 @@ function UIRuntime.build_view_model(snapshot, ui_session)
         confirmation_count = session_state.confirmation_count,
         transport_gate_result = transport_gate_result,
         simulation_result = simulation_result,
+        preflight_report = preflight_report,
         warnings = copy_list(snapshot.warnings),
         errors = copy_list(snapshot.errors)
     }
@@ -263,6 +280,23 @@ function UIRuntime.get_transport_simulation_lines(view_model)
         "Executed: " .. bool_label(result.executed == true),
         "Message: " .. text_or_nil(result.message),
         "Target Section: " .. text_or_nil(result.target_section)
+    }
+end
+
+function UIRuntime.get_transport_preflight_lines(view_model)
+    view_model = view_model or {}
+    local report = view_model.preflight_report or {}
+
+    return {
+        "Status: " .. text_or_nil(report.status),
+        "Action: " .. text_or_nil(report.action),
+        "Target Section: " .. text_or_nil(report.target_section),
+        "Manual Confirmed: " .. bool_label(report.manual_confirmed == true),
+        "Gate Executable: " .. bool_label(report.gate_executable == true),
+        "Gate Reason: " .. text_or_nil(report.gate_reason),
+        "Simulation OK: " .. bool_label(report.simulation_ok == true),
+        "Simulation Message: " .. text_or_nil(report.simulation_message),
+        "Summary: " .. text_or_nil(report.summary)
     }
 end
 

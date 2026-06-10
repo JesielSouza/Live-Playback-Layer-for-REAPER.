@@ -165,6 +165,16 @@ local function run_ui_runtime_tests()
     assert(confirmed_view.manual_confirmation_active == true, "Test 40 failed")
     print("Test 40 passed: build_view_model with matching confirmation sets manual_confirmation_active=true")
 
+    assert(type(view_model.preflight_report) == "table", "Test 41 failed")
+    print("Test 41 passed: build_view_model exposes preflight_report")
+
+    local preflight = ui_runtime.get_transport_preflight_lines(view_model)
+    assert(preflight[1] == "Status: blocked", "Test 42 failed")
+    print("Test 42 passed: get_transport_preflight_lines returns Status")
+
+    assert(preflight[9] == "Summary: preflight_blocked", "Test 43 failed")
+    print("Test 43 passed: get_transport_preflight_lines returns Summary")
+
     print("\nUI runtime tests passed successfully!")
 end
 

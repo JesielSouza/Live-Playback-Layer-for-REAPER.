@@ -91,3 +91,6 @@ The transport simulator runs in memory only. It returns `executed=false` and doe
 
 ## Manual Confirmation Session Note
 Manual confirmation is stored in a local UI session only. It can feed the transport gate and simulator as state, but it does not execute transport actions or call REAPER transport APIs.
+
+## Transport Preflight Note
+Transport preflight consolidates intent, gate, simulator, and manual confirmation state into a read-only report. It does not execute transport, move the cursor, seek, or mutate the project.

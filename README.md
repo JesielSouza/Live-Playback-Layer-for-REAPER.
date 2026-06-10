@@ -85,3 +85,6 @@ O simulador de transporte (`scripts/transport_simulator.lua`) roda apenas em mem
 
 ## Manual Confirmation State
 A UI mantem uma confirmacao manual em memoria (`scripts/ui_session.lua`). Os botoes `Confirm Intent (dry-run)` e `Clear Confirmation` alteram apenas esse estado local de UI; eles nao acionam transporte, nao movem cursor e nao alteram o projeto.
+
+## Transport Preflight
+O relatorio de preflight (`scripts/transport_preflight.lua`) consolida intent, gate, simulacao e confirmacao manual em memoria. Ele e apenas read-only e informa se a intent esta bloqueada, pronta para simulacao ou simulada, sem executar transporte.

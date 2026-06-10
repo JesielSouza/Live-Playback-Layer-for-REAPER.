@@ -52,3 +52,13 @@ Antes de considerar o MVP pronto para uso em palco, os seguintes cenários devem
 [ ] Mover o cursor para outra section e confirmar que a confirmacao anterior nao vale para a nova intent.
 [ ] Clicar `Clear Confirmation` e confirmar `Status: NOT CONFIRMED`.
 [ ] Confirmar que nada tocou, nada moveu e nada alterou o projeto.
+
+## Transport Preflight Report
+[ ] Confirmar a secao `Transport Preflight`.
+[ ] Antes de confirmar, validar `Status: blocked`.
+[ ] Antes de confirmar, validar `Manual Confirmed: false`.
+[ ] Antes de confirmar, validar `Gate Executable: false`.
+[ ] Antes de confirmar, validar `Summary: preflight_blocked`.
+[ ] Apos clicar `Confirm Intent (dry-run)`, confirmar `Manual Confirmed: true`.
+[ ] Confirmar que `Gate Executable` continua `false`.
+[ ] Confirmar que nada tocou, nada moveu e nada alterou o projeto.
