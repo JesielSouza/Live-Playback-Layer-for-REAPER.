@@ -108,54 +108,20 @@ local function loop()
 
         if snapshot_ok and view_model then
             render_separator()
-            ImGui.Text(ctx, "Status")
-            ImGui.Text(ctx, value_or_nil(view_model.status_line))
-            render_line("Read Only", view_model.read_only_label)
-            render_line("App State", view_model.app_state)
-            render_line("Validation Status", view_model.validation_label)
-
-            render_separator()
-            ImGui.Text(ctx, "Position")
-            local cards = UIRuntime.get_section_cards(view_model)
-            render_card(cards[7])
-            render_card(cards[1])
-
-            render_separator()
-            ImGui.Text(ctx, "Navigation")
-            render_card(cards[2])
-            render_card(cards[3])
-            render_card(cards[4])
-
-            render_separator()
-            ImGui.Text(ctx, "Transport Preview")
-            for _, line in ipairs(UIRuntime.get_transport_preview_lines(view_model)) do
+            ImGui.Text(ctx, "Operator Panel")
+            for _, line in ipairs(UIRuntime.get_operator_lines(view_model)) do
                 ImGui.Text(ctx, line)
             end
-            ImGui.Text(ctx, value_or_nil(view_model.transport_confirmation_label))
-            for _, line in ipairs(UIRuntime.get_transport_confirmation_lines(view_model)) do
-                ImGui.Text(ctx, line)
-            end
-            if ImGui.Button(ctx, "Confirm Intent (dry-run)") then
+
+            if ImGui.Button(ctx, "Confirm Intent") then
                 UISession.confirm_transport(ui_session, view_model.transport_intent_preview)
             end
-            if ImGui.Button(ctx, "Clear Confirmation") then
-                UISession.clear_transport_confirmation(ui_session)
-            end
-
-            render_separator()
-            ImGui.Text(ctx, "Cursor Move Control")
-            for _, line in ipairs(UIRuntime.get_execution_control_lines(view_model)) do
-                ImGui.Text(ctx, line)
-            end
+            ImGui.SameLine(ctx)
             if ImGui.Button(ctx, "Arm Cursor Move") then
                 UISession.arm_execution(ui_session)
             end
             ImGui.SameLine(ctx)
-            if ImGui.Button(ctx, "Disarm") then
-                UISession.disarm_execution(ui_session)
-            end
-
-            if ImGui.Button(ctx, "Move Cursor to Target Section") then
+            if ImGui.Button(ctx, "Move Cursor") then
                 local result = TransportControl.execute_real_intent(
                     view_model.transport_intent_preview,
                     snapshot,
@@ -169,61 +135,137 @@ local function loop()
                 UISession.set_last_execution_result(ui_session, result)
                 UISession.disarm_execution(ui_session)
             end
-
-            render_separator()
-            ImGui.Text(ctx, "Transport Gate")
-            for _, line in ipairs(UIRuntime.get_transport_gate_lines(view_model)) do
-                ImGui.Text(ctx, line)
+            ImGui.SameLine(ctx)
+            if ImGui.Button(ctx, "Clear") then
+                UISession.clear_transport_confirmation(ui_session)
+                UISession.disarm_execution(ui_session)
             end
 
             render_separator()
-            ImGui.Text(ctx, "Transport Simulation")
-            for _, line in ipairs(UIRuntime.get_transport_simulation_lines(view_model)) do
-                ImGui.Text(ctx, line)
+            local debug_label = view_model.debug_visible and "Hide Debug" or "Show Debug"
+            if ImGui.Button(ctx, debug_label) then
+                UISession.toggle_debug(ui_session)
             end
 
-            render_separator()
-            ImGui.Text(ctx, "Transport Preflight")
-            for _, line in ipairs(UIRuntime.get_transport_preflight_lines(view_model)) do
-                ImGui.Text(ctx, line)
-            end
+            if view_model.debug_visible then
+                render_separator()
+                ImGui.Text(ctx, "Status")
+                ImGui.Text(ctx, value_or_nil(view_model.status_line))
+                render_line("Read Only", view_model.read_only_label)
+                render_line("App State", view_model.app_state)
+                render_line("Validation Status", view_model.validation_label)
 
-            render_separator()
-            ImGui.Text(ctx, "Operational Safety Dashboard")
-            for _, line in ipairs(UIRuntime.get_safety_dashboard_lines(view_model)) do
-                ImGui.Text(ctx, line)
-            end
+                render_separator()
+                ImGui.Text(ctx, "Position")
+                local cards = UIRuntime.get_section_cards(view_model)
+                render_card(cards[7])
+                render_card(cards[1])
 
-            render_separator()
-            ImGui.Text(ctx, "Real Transport Adapter")
-            for _, line in ipairs(UIRuntime.get_transport_adapter_lines(view_model)) do
-                ImGui.Text(ctx, line)
-            end
+                render_separator()
+                ImGui.Text(ctx, "Navigation")
+                render_card(cards[2])
+                render_card(cards[3])
+                render_card(cards[4])
 
-            render_separator()
-            ImGui.Text(ctx, "Seek Plan")
-            for _, line in ipairs(UIRuntime.get_seek_plan_lines(view_model)) do
-                ImGui.Text(ctx, line)
-            end
+                render_separator()
+                ImGui.Text(ctx, "Transport Preview")
+                for _, line in ipairs(UIRuntime.get_transport_preview_lines(view_model)) do
+                    ImGui.Text(ctx, line)
+                end
+                ImGui.Text(ctx, value_or_nil(view_model.transport_confirmation_label))
+                for _, line in ipairs(UIRuntime.get_transport_confirmation_lines(view_model)) do
+                    ImGui.Text(ctx, line)
+                end
+                if ImGui.Button(ctx, "Confirm Intent (dry-run)") then
+                    UISession.confirm_transport(ui_session, view_model.transport_intent_preview)
+                end
+                if ImGui.Button(ctx, "Clear Confirmation") then
+                    UISession.clear_transport_confirmation(ui_session)
+                end
 
-            render_separator()
-            ImGui.Text(ctx, "Real Transport Readiness")
-            for _, line in ipairs(UIRuntime.get_transport_readiness_lines(view_model)) do
-                ImGui.Text(ctx, line)
-            end
+                render_separator()
+                ImGui.Text(ctx, "Cursor Move Control")
+                for _, line in ipairs(UIRuntime.get_execution_control_lines(view_model)) do
+                    ImGui.Text(ctx, line)
+                end
+                if ImGui.Button(ctx, "Arm Cursor Move (debug)") then
+                    UISession.arm_execution(ui_session)
+                end
+                ImGui.SameLine(ctx)
+                if ImGui.Button(ctx, "Disarm (debug)") then
+                    UISession.disarm_execution(ui_session)
+                end
 
-            render_separator()
-            ImGui.Text(ctx, "Pre-Execution Audit")
-            for _, line in ipairs(UIRuntime.get_pre_execution_audit_lines(view_model)) do
-                ImGui.Text(ctx, line)
-            end
+                if ImGui.Button(ctx, "Move Cursor to Target Section (debug)") then
+                    local result = TransportControl.execute_real_intent(
+                        view_model.transport_intent_preview,
+                        snapshot,
+                        view_model.transport_gate_result,
+                        {
+                            enable_real_cursor_move = true,
+                            execution_armed = UISession.is_execution_armed(ui_session),
+                            manual_confirmed = UISession.is_transport_confirmed(ui_session, view_model.transport_intent_preview)
+                        }
+                    )
+                    UISession.set_last_execution_result(ui_session, result)
+                    UISession.disarm_execution(ui_session)
+                end
 
-            render_separator()
-            ImGui.Text(ctx, "Diagnostics")
-            for _, line in ipairs(UIRuntime.get_diagnostics_lines(view_model)) do
-                ImGui.Text(ctx, line)
+                render_separator()
+                ImGui.Text(ctx, "Transport Gate")
+                for _, line in ipairs(UIRuntime.get_transport_gate_lines(view_model)) do
+                    ImGui.Text(ctx, line)
+                end
+
+                render_separator()
+                ImGui.Text(ctx, "Transport Simulation")
+                for _, line in ipairs(UIRuntime.get_transport_simulation_lines(view_model)) do
+                    ImGui.Text(ctx, line)
+                end
+
+                render_separator()
+                ImGui.Text(ctx, "Transport Preflight")
+                for _, line in ipairs(UIRuntime.get_transport_preflight_lines(view_model)) do
+                    ImGui.Text(ctx, line)
+                end
+
+                render_separator()
+                ImGui.Text(ctx, "Operational Safety Dashboard")
+                for _, line in ipairs(UIRuntime.get_safety_dashboard_lines(view_model)) do
+                    ImGui.Text(ctx, line)
+                end
+
+                render_separator()
+                ImGui.Text(ctx, "Real Transport Adapter")
+                for _, line in ipairs(UIRuntime.get_transport_adapter_lines(view_model)) do
+                    ImGui.Text(ctx, line)
+                end
+
+                render_separator()
+                ImGui.Text(ctx, "Seek Plan")
+                for _, line in ipairs(UIRuntime.get_seek_plan_lines(view_model)) do
+                    ImGui.Text(ctx, line)
+                end
+
+                render_separator()
+                ImGui.Text(ctx, "Real Transport Readiness")
+                for _, line in ipairs(UIRuntime.get_transport_readiness_lines(view_model)) do
+                    ImGui.Text(ctx, line)
+                end
+
+                render_separator()
+                ImGui.Text(ctx, "Pre-Execution Audit")
+                for _, line in ipairs(UIRuntime.get_pre_execution_audit_lines(view_model)) do
+                    ImGui.Text(ctx, line)
+                end
+
+                render_separator()
+                ImGui.Text(ctx, "Diagnostics")
+                for _, line in ipairs(UIRuntime.get_diagnostics_lines(view_model)) do
+                    ImGui.Text(ctx, line)
+                end
+                ImGui.Text(ctx, UIRuntime.get_read_only_warning())
             end
-            ImGui.Text(ctx, UIRuntime.get_read_only_warning())
         else
             ImGui.Text(ctx, "Runtime snapshot failed.")
             ImGui.Text(ctx, value_or_nil(snapshot))

@@ -163,6 +163,17 @@ function UIRuntime.build_view_model(snapshot, ui_session)
             pre_execution_audit = pre_execution_audit,
             execution_armed = session_state.execution_armed,
             last_execution_result = session_state.last_execution_result,
+            debug_visible = session_state.debug_visible,
+            operator_summary = {
+                current_section = "nil",
+                target_section = "nil",
+                target_position = "nil",
+                confirmation_status = "NOT CONFIRMED",
+                execution_armed = false,
+                last_execution_reason = nil,
+                last_execution_executed = nil,
+                safety_note = "Cursor move only. No play/stop."
+            },
             warnings = {},
             errors = { "missing_snapshot" }
         }
@@ -254,6 +265,17 @@ function UIRuntime.build_view_model(snapshot, ui_session)
         pre_execution_audit = pre_execution_audit,
         execution_armed = session_state.execution_armed,
         last_execution_result = session_state.last_execution_result,
+        debug_visible = session_state.debug_visible,
+        operator_summary = {
+            current_section = text_or_nil(snapshot.current_section),
+            target_section = text_or_nil(transport_intent.target_section),
+            target_position = position_label(seek_plan.target_position),
+            confirmation_status = manual_confirmed and "CONFIRMED" or "NOT CONFIRMED",
+            execution_armed = session_state.execution_armed == true,
+            last_execution_reason = session_state.last_execution_result and session_state.last_execution_result.reason or nil,
+            last_execution_executed = session_state.last_execution_result and session_state.last_execution_result.executed or nil,
+            safety_note = "Cursor move only. No play/stop."
+        },
         warnings = copy_list(snapshot.warnings),
         errors = copy_list(snapshot.errors)
     }
@@ -316,6 +338,28 @@ function UIRuntime.get_execution_control_lines(view_model)
     else
         table.insert(lines, "Last Execution: none")
     end
+
+    return lines
+end
+
+function UIRuntime.get_operator_lines(view_model)
+    view_model = view_model or {}
+    local summary = view_model.operator_summary or {}
+
+    local lines = {
+        "Current Section: " .. tostring(summary.current_section or "nil"),
+        "Next Target: " .. tostring(summary.target_section or "nil"),
+        "Target Position: " .. tostring(summary.target_position or "nil"),
+        "Confirmation: " .. tostring(summary.confirmation_status or "NOT CONFIRMED"),
+        "Execution Armed: " .. bool_label(summary.execution_armed == true)
+    }
+
+    if summary.last_execution_reason ~= nil then
+        table.insert(lines, "Last Execution: executed=" .. bool_label(summary.last_execution_executed == true)
+            .. " reason=" .. tostring(summary.last_execution_reason))
+    end
+
+    table.insert(lines, "Safety: " .. tostring(summary.safety_note or "Cursor move only. No play/stop."))
 
     return lines
 end

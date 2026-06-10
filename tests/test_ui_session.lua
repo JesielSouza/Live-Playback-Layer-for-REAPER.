@@ -99,6 +99,20 @@ local function run_ui_session_tests()
     assert(state2.last_execution_result == result, "Test 18 failed: get_state includes result")
     print("Test 18 passed: set/get last_execution_result works")
 
+    ui_session.reset(session)
+    assert(ui_session.is_debug_visible(session) == false, "Test 19 failed: reset must hide debug")
+    ui_session.toggle_debug(session)
+    assert(ui_session.is_debug_visible(session) == true, "Test 20 failed: toggle_debug fails")
+    ui_session.toggle_debug(session)
+    assert(ui_session.is_debug_visible(session) == false, "Test 21 failed: toggle_debug back fails")
+    ui_session.set_debug_visible(session, true)
+    assert(ui_session.is_debug_visible(session) == true, "Test 22 failed: set_debug_visible true fails")
+    ui_session.set_debug_visible(session, false)
+    assert(ui_session.is_debug_visible(session) == false, "Test 23 failed: set_debug_visible false fails")
+    local state3 = ui_session.get_state(session)
+    assert(state3.debug_visible == false, "Test 24 failed: get_state includes debug_visible")
+    print("Test 19-24 passed: debug visibility state management works")
+
     print("\nUI session tests passed successfully!")
 end
 

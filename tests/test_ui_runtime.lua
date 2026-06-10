@@ -293,6 +293,25 @@ local function run_ui_runtime_tests()
     assert(lines_with_result[5] == "- Target Position: 42.00s", "Test 80 failed")
     print("Test 75-80 passed: get_execution_control_lines returns result state")
 
+    assert(view_model.debug_visible == false, "Test 81 failed")
+    assert(type(view_model.operator_summary) == "table", "Test 82 failed")
+    assert(view_model.operator_summary.current_section == "VERSE_1", "Test 83 failed")
+    assert(view_model.operator_summary.target_section == "CHORUS_1", "Test 84 failed")
+    assert(view_model.operator_summary.target_position == "30.00s", "Test 85 failed")
+    assert(view_model.operator_summary.confirmation_status == "NOT CONFIRMED", "Test 86 failed")
+    assert(view_model.operator_summary.execution_armed == false, "Test 87 failed")
+    assert(view_model.operator_summary.safety_note == "Cursor move only. No play/stop.", "Test 88 failed")
+    print("Test 81-88 passed: build_view_model includes operator_summary")
+
+    local operator_lines = ui_runtime.get_operator_lines(view_model)
+    assert(operator_lines[1] == "Current Section: VERSE_1", "Test 89 failed")
+    assert(operator_lines[2] == "Next Target: CHORUS_1", "Test 90 failed")
+    assert(operator_lines[3] == "Target Position: 30.00s", "Test 91 failed")
+    assert(operator_lines[4] == "Confirmation: NOT CONFIRMED", "Test 92 failed")
+    assert(operator_lines[5] == "Execution Armed: false", "Test 93 failed")
+    assert(operator_lines[#operator_lines] == "Safety: Cursor move only. No play/stop.", "Test 94 failed")
+    print("Test 89-94 passed: get_operator_lines returns expected content")
+
     print("\nUI runtime tests passed successfully!")
 end
 

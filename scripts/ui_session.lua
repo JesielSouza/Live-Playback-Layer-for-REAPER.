@@ -13,6 +13,7 @@ local function apply_defaults(session)
     session.confirmation_count = 0
     session.execution_armed = false
     session.last_execution_result = nil
+    session.debug_visible = false
     return session
 end
 
@@ -94,6 +95,25 @@ function UISession.get_last_execution_result(session)
     return session.last_execution_result
 end
 
+function UISession.toggle_debug(session)
+    session = session or UISession.create()
+    session.debug_visible = not (session.debug_visible == true)
+    return session
+end
+
+function UISession.set_debug_visible(session, value)
+    session = session or UISession.create()
+    session.debug_visible = value == true
+    return session
+end
+
+function UISession.is_debug_visible(session)
+    if type(session) ~= "table" then
+        return false
+    end
+    return session.debug_visible == true
+end
+
 function UISession.get_state(session)
     session = session or {}
 
@@ -103,7 +123,8 @@ function UISession.get_state(session)
         confirmed_target_section = session.confirmed_target_section,
         confirmation_count = session.confirmation_count or 0,
         execution_armed = session.execution_armed == true,
-        last_execution_result = session.last_execution_result
+        last_execution_result = session.last_execution_result,
+        debug_visible = session.debug_visible == true
     }
 end
 
