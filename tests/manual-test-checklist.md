@@ -125,3 +125,18 @@ Antes de considerar o MVP pronto para uso em palco, os seguintes cenários devem
 [ ] Apos confirmar, validar `Summary: readiness_review`.
 [ ] Confirmar que nenhum botao operacional novo apareceu.
 [ ] Confirmar que nada tocou, nada moveu e nada alterou o projeto.
+
+## Pre-Execution Audit
+[ ] Confirmar a secao `Pre-Execution Audit`.
+[ ] Antes de confirmar, validar `Audit Status: blocked`.
+[ ] Confirmar `Generated: true`.
+[ ] Confirmar `Execution Allowed: false`.
+[ ] Confirmar `Adapter Locked: true`.
+[ ] Confirmar `Seek Locked: true`.
+[ ] Confirmar `Manual Confirmed: false`.
+[ ] Confirmar `Summary: audit_blocked`.
+[ ] Apos `Confirm Intent (dry-run)`, validar `Audit Status: review`.
+[ ] Apos confirmar, validar `Manual Confirmed: true`.
+[ ] Apos confirmar, validar `Summary: audit_review`.
+[ ] Confirmar que nenhum botao operacional novo apareceu.
+[ ] Confirmar que nada tocou, nada moveu e nada alterou o projeto.

@@ -106,3 +106,6 @@ A UI exibe o plano de seek atual de forma read-only. O bloco mostra action, sect
 
 ## Real Transport Readiness
 O checklist de readiness (`scripts/transport_readiness.lua`) consolida criterios obrigatorios antes de qualquer liberacao futura de transporte real. O relatorio e read-only e atualmente permanece blocked/review porque adapter, gate e plano seguem travados.
+
+## Pre-Execution Audit
+O snapshot de auditoria pre-execucao (`scripts/pre_execution_audit.lua`) consolida runtime, intent, confirmacao manual, gate, simulacao, preflight, safety, adapter, seek plan e readiness. Ele e read-only e sempre mantem `execution_allowed=false` nesta fase.

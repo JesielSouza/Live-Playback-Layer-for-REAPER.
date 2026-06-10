@@ -112,3 +112,6 @@ The UI exposes the current seek plan as read-only status. It displays the planne
 
 ## Real Transport Readiness Note
 The readiness checklist summarizes the required gates before any future real transport enablement. It remains read-only and reports blockers while the adapter, gate, and seek plan stay locked.
+
+## Pre-Execution Audit Note
+The pre-execution audit snapshot consolidates runtime, intent, manual confirmation, gate, simulation, preflight, safety, adapter, seek plan, and readiness state. It is read-only and keeps execution disallowed.

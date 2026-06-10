@@ -184,6 +184,12 @@ local function loop()
             end
 
             render_separator()
+            ImGui.Text(ctx, "Pre-Execution Audit")
+            for _, line in ipairs(UIRuntime.get_pre_execution_audit_lines(view_model)) do
+                ImGui.Text(ctx, line)
+            end
+
+            render_separator()
             ImGui.Text(ctx, "Diagnostics")
             for _, line in ipairs(UIRuntime.get_diagnostics_lines(view_model)) do
                 ImGui.Text(ctx, line)

@@ -9,6 +9,7 @@ local TransportAdapter = require("scripts.transport_adapter")
 local TransportGate = require("scripts.transport_gate")
 local TransportPreflight = require("scripts.transport_preflight")
 local TransportReadiness = require("scripts.transport_readiness")
+local PreExecutionAudit = require("scripts.pre_execution_audit")
 local SafetyDashboard = require("scripts.safety_dashboard")
 local UISession = require("scripts.ui_session")
 
@@ -111,6 +112,18 @@ function UIRuntime.build_view_model(snapshot, ui_session)
             seek_plan = seek_plan,
             ui_session_state = session_state
         })
+        local pre_execution_audit = PreExecutionAudit.build({
+            runtime_snapshot = {},
+            intent = nil,
+            ui_session_state = session_state,
+            gate_result = transport_gate_result,
+            simulation_result = simulation_result,
+            preflight_report = preflight_report,
+            safety_dashboard = safety_dashboard,
+            adapter_capabilities = adapter_capabilities,
+            seek_plan = seek_plan,
+            readiness = transport_readiness
+        })
         local view_model = {
             ok = false,
             read_only = true,
@@ -147,6 +160,7 @@ function UIRuntime.build_view_model(snapshot, ui_session)
             adapter_capabilities = adapter_capabilities,
             seek_plan = seek_plan,
             transport_readiness = transport_readiness,
+            pre_execution_audit = pre_execution_audit,
             warnings = {},
             errors = { "missing_snapshot" }
         }
@@ -188,6 +202,18 @@ function UIRuntime.build_view_model(snapshot, ui_session)
         seek_plan = seek_plan,
         ui_session_state = session_state
     })
+    local pre_execution_audit = PreExecutionAudit.build({
+        runtime_snapshot = snapshot,
+        intent = transport_intent,
+        ui_session_state = session_state,
+        gate_result = transport_gate_result,
+        simulation_result = simulation_result,
+        preflight_report = preflight_report,
+        safety_dashboard = safety_dashboard,
+        adapter_capabilities = adapter_capabilities,
+        seek_plan = seek_plan,
+        readiness = transport_readiness
+    })
     local view_model = {
         ok = snapshot.ok == true,
         read_only = true,
@@ -224,6 +250,7 @@ function UIRuntime.build_view_model(snapshot, ui_session)
         adapter_capabilities = adapter_capabilities,
         seek_plan = seek_plan,
         transport_readiness = transport_readiness,
+        pre_execution_audit = pre_execution_audit,
         warnings = copy_list(snapshot.warnings),
         errors = copy_list(snapshot.errors)
     }
@@ -412,6 +439,37 @@ function UIRuntime.get_transport_readiness_lines(view_model)
         "- seek_plan_ok: " .. bool_label(checks.seek_plan_ok == true),
         "- seek_plan_unlocked: " .. bool_label(checks.seek_plan_unlocked == true),
         "- manual_confirmed: " .. bool_label(checks.manual_confirmed == true),
+        "Blockers:"
+    }
+
+    for _, blocker in ipairs(blockers) do
+        table.insert(lines, "- " .. tostring(blocker))
+    end
+
+    return lines
+end
+
+function UIRuntime.get_pre_execution_audit_lines(view_model)
+    view_model = view_model or {}
+    local audit = view_model.pre_execution_audit or {}
+    local blockers = audit.blockers or {}
+    local lines = {
+        "Audit Status: " .. text_or_nil(audit.audit_status),
+        "Generated: " .. bool_label(audit.generated == true),
+        "Action: " .. text_or_nil(audit.action),
+        "Current Section: " .. text_or_nil(audit.current_section),
+        "Target Section: " .. text_or_nil(audit.target_section),
+        "Target Position: " .. text_or_nil(audit.target_position),
+        "Manual Confirmed: " .. bool_label(audit.manual_confirmed == true),
+        "Gate Reason: " .. text_or_nil(audit.gate_reason),
+        "Simulation Message: " .. text_or_nil(audit.simulation_message),
+        "Preflight Status: " .. text_or_nil(audit.preflight_status),
+        "Safety Level: " .. text_or_nil(audit.safety_level),
+        "Adapter Locked: " .. bool_label(audit.adapter_locked == true),
+        "Seek Locked: " .. bool_label(audit.seek_locked == true),
+        "Readiness Status: " .. text_or_nil(audit.readiness_status),
+        "Execution Allowed: " .. bool_label(audit.execution_allowed == true),
+        "Summary: " .. text_or_nil(audit.summary),
         "Blockers:"
     }
 

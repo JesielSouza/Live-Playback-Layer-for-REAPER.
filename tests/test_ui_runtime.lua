@@ -259,6 +259,19 @@ local function run_ui_runtime_tests()
     assert(readiness[13] == "Blockers:", "Test 67 failed")
     print("Test 67 passed: get_transport_readiness_lines returns Blockers")
 
+    assert(type(view_model.pre_execution_audit) == "table", "Test 68 failed")
+    print("Test 68 passed: build_view_model exposes pre_execution_audit")
+
+    local audit = ui_runtime.get_pre_execution_audit_lines(view_model)
+    assert(audit[1] == "Audit Status: blocked", "Test 69 failed")
+    print("Test 69 passed: get_pre_execution_audit_lines returns Audit Status")
+
+    assert(audit[15] == "Execution Allowed: false", "Test 70 failed")
+    print("Test 70 passed: get_pre_execution_audit_lines returns Execution Allowed")
+
+    assert(audit[17] == "Blockers:", "Test 71 failed")
+    print("Test 71 passed: get_pre_execution_audit_lines returns Blockers")
+
     print("\nUI runtime tests passed successfully!")
 end
 
