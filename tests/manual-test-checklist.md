@@ -71,5 +71,11 @@ Antes de considerar o MVP pronto para uso em palco, os seguintes cenários devem
 [ ] Antes de confirmar, validar `Manual Confirmation Active: false`.
 [ ] Apos clicar `Confirm Intent (dry-run)`, validar `Safety Level: review`.
 [ ] Apos confirmar, validar `Manual Confirmation Active: true`.
-[ ] Confirmar as garantias `transport_real_disabled`, `no_play_stop_calls`, `no_main_on_command`, `no_cursor_move`, `no_seek` e `no_project_mutation`.
+[ ] Confirmar as garantias `transport_real_disabled`, `no_play_stop_calls`, `no_command_dispatch`, `no_cursor_move`, `no_seek` e `no_project_mutation`.
+[ ] Confirmar que nada tocou, nada moveu e nada alterou o projeto.
+
+## Locked Transport Adapter
+[ ] Confirmar que `scripts/transport_adapter.lua` permanece travado.
+[ ] Confirmar que capacidades reais retornam `false`.
+[ ] Confirmar que qualquer tentativa de execucao real retorna `real_transport_locked` ou outro bloqueio de validacao.
 [ ] Confirmar que nada tocou, nada moveu e nada alterou o projeto.

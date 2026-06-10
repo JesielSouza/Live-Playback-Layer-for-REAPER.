@@ -77,8 +77,8 @@ local function run_safety_dashboard_tests()
     assert(contains(locked.guarantees, "no_play_stop_calls"), "Test 10 failed")
     print("Test 10 passed: guarantees contains no_play_stop_calls")
 
-    assert(contains(locked.guarantees, "no_main_on_command"), "Test 11 failed")
-    print("Test 11 passed: guarantees contains no_main_on_command")
+    assert(contains(locked.guarantees, "no_command_dispatch"), "Test 11 failed")
+    print("Test 11 passed: guarantees contains no_command_dispatch")
 
     assert(contains(locked.guarantees, "no_cursor_move"), "Test 12 failed")
     print("Test 12 passed: guarantees contains no_cursor_move")

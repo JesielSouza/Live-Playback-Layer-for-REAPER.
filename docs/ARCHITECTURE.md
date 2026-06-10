@@ -97,3 +97,6 @@ Transport preflight consolidates intent, gate, simulator, and manual confirmatio
 
 ## Operational Safety Dashboard Note
 The safety dashboard summarizes the current read-only guarantees for the UI. It keeps real transport disabled and execution blocked while surfacing gate, preflight, simulation, and manual confirmation state.
+
+## Locked Transport Adapter Note
+The transport adapter defines the future real execution interface, but this implementation is locked. It reports disabled capabilities and returns blocked execution results only.

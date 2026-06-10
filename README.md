@@ -91,3 +91,6 @@ O relatorio de preflight (`scripts/transport_preflight.lua`) consolida intent, g
 
 ## Operational Safety Dashboard
 O dashboard de seguranca (`scripts/safety_dashboard.lua`) consolida garantias read-only antes de qualquer execucao futura. Ele mantem transporte real desabilitado, execucao bloqueada e lista as garantias operacionais exibidas na UI.
+
+## Locked Transport Adapter
+O adapter de transporte (`scripts/transport_adapter.lua`) prepara a interface futura de execucao real, mas permanece travado por configuracao. Todas as capacidades reais retornam `false`, `execute_real` nunca executa e o motivo padrao e `real_transport_locked`.

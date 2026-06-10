@@ -5,6 +5,7 @@
 --]]
 
 local TransportControl = {}
+local TransportAdapter = require("scripts.transport_adapter")
 local TransportGate = require("scripts.transport_gate")
 local TransportSimulator = require("scripts.transport_simulator")
 
@@ -126,6 +127,10 @@ end
 
 function TransportControl.simulate_intent(intent, runtime_snapshot, options)
     return TransportSimulator.simulate(intent, runtime_snapshot, options)
+end
+
+function TransportControl.execute_real_intent(intent, runtime_snapshot, gate_result, options)
+    return TransportAdapter.execute_real(intent, runtime_snapshot, gate_result, options)
 end
 
 return TransportControl

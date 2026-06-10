@@ -9,7 +9,7 @@ local SafetyDashboard = {}
 local GUARANTEES = {
     "transport_real_disabled",
     "no_play_stop_calls",
-    "no_main_on_command",
+    "no_command_dispatch",
     "no_cursor_move",
     "no_seek",
     "no_project_mutation"
