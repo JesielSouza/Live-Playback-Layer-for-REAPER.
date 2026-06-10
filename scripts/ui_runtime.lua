@@ -83,9 +83,9 @@ end
 
 function UIRuntime.build_view_model(snapshot, ui_session)
     local adapter_capabilities = TransportAdapter.get_capabilities({})
+    local session_state = UISession.get_state(ui_session)
 
     if type(snapshot) ~= "table" then
-        local session_state = UISession.get_state(ui_session)
         local transport_gate_result = TransportGate.evaluate(nil, nil)
         local simulation_result = TransportControl.simulate_intent(nil, nil, {
             enabled = false,
@@ -161,6 +161,8 @@ function UIRuntime.build_view_model(snapshot, ui_session)
             seek_plan = seek_plan,
             transport_readiness = transport_readiness,
             pre_execution_audit = pre_execution_audit,
+            execution_armed = session_state.execution_armed,
+            last_execution_result = session_state.last_execution_result,
             warnings = {},
             errors = { "missing_snapshot" }
         }
@@ -169,7 +171,6 @@ function UIRuntime.build_view_model(snapshot, ui_session)
     end
 
     local transport_intent = TransportControl.build_intent("go_next", snapshot, { dry_run = true })
-    local session_state = UISession.get_state(ui_session)
     local manual_confirmed = UISession.is_transport_confirmed(ui_session, transport_intent)
     local transport_gate_result = TransportGate.evaluate(transport_intent, snapshot, {
         enable_transport = false,
@@ -251,6 +252,8 @@ function UIRuntime.build_view_model(snapshot, ui_session)
         seek_plan = seek_plan,
         transport_readiness = transport_readiness,
         pre_execution_audit = pre_execution_audit,
+        execution_armed = session_state.execution_armed,
+        last_execution_result = session_state.last_execution_result,
         warnings = copy_list(snapshot.warnings),
         errors = copy_list(snapshot.errors)
     }
@@ -293,6 +296,28 @@ end
 
 function UIRuntime.get_read_only_warning()
     return "No transport actions are triggered."
+end
+
+function UIRuntime.get_execution_control_lines(view_model)
+    view_model = view_model or {}
+    local result = view_model.last_execution_result
+
+    local lines = {
+        "Execution Armed: " .. bool_label(view_model.execution_armed == true)
+    }
+
+    if result then
+        table.insert(lines, "Last Execution:")
+        table.insert(lines, "- Executed: " .. bool_label(result.executed == true))
+        table.insert(lines, "- Reason: " .. text_or_nil(result.reason))
+        if result.target_position then
+            table.insert(lines, "- Target Position: " .. position_label(result.target_position))
+        end
+    else
+        table.insert(lines, "Last Execution: none")
+    end
+
+    return lines
 end
 
 function UIRuntime.get_transport_preview_lines(view_model)

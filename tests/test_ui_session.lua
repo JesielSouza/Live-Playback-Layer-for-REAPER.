@@ -66,7 +66,8 @@ local function run_ui_session_tests()
     ui_session.reset(session)
     assert(session.transport_confirmed == false, "Test 13 failed")
     assert(session.confirmation_count == 0, "Test 13 failed")
-    print("Test 13 passed: reset clears state and zeroes confirmation_count")
+    assert(session.execution_armed == false, "Test 13 failed: reset must disarm")
+    print("Test 13 passed: reset clears state, zeroes confirmation_count and disarms")
 
     ui_session.confirm_transport(session, build_intent())
     local state = ui_session.get_state(session)
@@ -75,6 +76,28 @@ local function run_ui_session_tests()
     assert(session.transport_confirmed == true, "Test 14 failed")
     assert(session.confirmation_count == 1, "Test 14 failed")
     print("Test 14 passed: get_state returns safe copy")
+
+    ui_session.arm_execution(session)
+    assert(session.execution_armed == true, "Test 15 failed")
+    assert(ui_session.is_execution_armed(session) == true, "Test 15 failed")
+    print("Test 15 passed: arm_execution arms session")
+
+    ui_session.disarm_execution(session)
+    assert(session.execution_armed == false, "Test 16 failed")
+    assert(ui_session.is_execution_armed(session) == false, "Test 16 failed")
+    print("Test 16 passed: disarm_execution disarms session")
+
+    ui_session.arm_execution(session)
+    ui_session.clear_transport_confirmation(session)
+    assert(session.execution_armed == false, "Test 17 failed")
+    print("Test 17 passed: clear_transport_confirmation also disarms")
+
+    local result = { ok = true, executed = true, reason = "test" }
+    ui_session.set_last_execution_result(session, result)
+    assert(ui_session.get_last_execution_result(session) == result, "Test 18 failed")
+    local state2 = ui_session.get_state(session)
+    assert(state2.last_execution_result == result, "Test 18 failed: get_state includes result")
+    print("Test 18 passed: set/get last_execution_result works")
 
     print("\nUI session tests passed successfully!")
 end

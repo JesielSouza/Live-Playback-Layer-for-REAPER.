@@ -59,6 +59,7 @@ local ImGui = require("imgui")("0.10")
 local Runtime = require("scripts.runtime")
 local UIRuntime = require("scripts.ui_runtime")
 local UISession = require("scripts.ui_session")
+local TransportControl = require("scripts.transport_control")
 
 local ctx = ImGui.CreateContext("Live Playback Layer")
 local ui_session = UISession.create()
@@ -139,6 +140,34 @@ local function loop()
             end
             if ImGui.Button(ctx, "Clear Confirmation") then
                 UISession.clear_transport_confirmation(ui_session)
+            end
+
+            render_separator()
+            ImGui.Text(ctx, "Cursor Move Control")
+            for _, line in ipairs(UIRuntime.get_execution_control_lines(view_model)) do
+                ImGui.Text(ctx, line)
+            end
+            if ImGui.Button(ctx, "Arm Cursor Move") then
+                UISession.arm_execution(ui_session)
+            end
+            ImGui.SameLine(ctx)
+            if ImGui.Button(ctx, "Disarm") then
+                UISession.disarm_execution(ui_session)
+            end
+
+            if ImGui.Button(ctx, "Move Cursor to Target Section") then
+                local result = TransportControl.execute_real_intent(
+                    view_model.transport_intent_preview,
+                    snapshot,
+                    view_model.transport_gate_result,
+                    {
+                        enable_real_cursor_move = true,
+                        execution_armed = UISession.is_execution_armed(ui_session),
+                        manual_confirmed = UISession.is_transport_confirmed(ui_session, view_model.transport_intent_preview)
+                    }
+                )
+                UISession.set_last_execution_result(ui_session, result)
+                UISession.disarm_execution(ui_session)
             end
 
             render_separator()

@@ -272,6 +272,27 @@ local function run_ui_runtime_tests()
     assert(audit[17] == "Blockers:", "Test 71 failed")
     print("Test 71 passed: get_pre_execution_audit_lines returns Blockers")
 
+    assert(view_model.execution_armed == false, "Test 72 failed")
+    print("Test 72 passed: build_view_model includes execution_armed")
+
+    local execution_lines = ui_runtime.get_execution_control_lines(view_model)
+    assert(execution_lines[1] == "Execution Armed: false", "Test 73 failed")
+    assert(execution_lines[2] == "Last Execution: none", "Test 74 failed")
+    print("Test 73-74 passed: get_execution_control_lines returns default state")
+
+    local session_with_result = ui_session.create()
+    ui_session.arm_execution(session_with_result)
+    ui_session.set_last_execution_result(session_with_result, { executed = true, reason = "test_success", target_position = 42 })
+    local view_with_result = ui_runtime.build_view_model(build_snapshot(), session_with_result)
+    assert(view_with_result.execution_armed == true, "Test 75 failed")
+    local lines_with_result = ui_runtime.get_execution_control_lines(view_with_result)
+    assert(lines_with_result[1] == "Execution Armed: true", "Test 76 failed")
+    assert(lines_with_result[2] == "Last Execution:", "Test 77 failed")
+    assert(lines_with_result[3] == "- Executed: true", "Test 78 failed")
+    assert(lines_with_result[4] == "- Reason: test_success", "Test 79 failed")
+    assert(lines_with_result[5] == "- Target Position: 42.00s", "Test 80 failed")
+    print("Test 75-80 passed: get_execution_control_lines returns result state")
+
     print("\nUI runtime tests passed successfully!")
 end
 

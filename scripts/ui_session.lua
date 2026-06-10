@@ -11,6 +11,8 @@ local function apply_defaults(session)
     session.confirmed_action = nil
     session.confirmed_target_section = nil
     session.confirmation_count = 0
+    session.execution_armed = false
+    session.last_execution_result = nil
     return session
 end
 
@@ -43,6 +45,7 @@ function UISession.clear_transport_confirmation(session)
     session.confirmed_action = nil
     session.confirmed_target_section = nil
     session.confirmation_count = session.confirmation_count or 0
+    session.execution_armed = false
     return session
 end
 
@@ -59,6 +62,38 @@ function UISession.is_transport_confirmed(session, intent)
         and intent.target_section == session.confirmed_target_section
 end
 
+function UISession.arm_execution(session)
+    session = session or UISession.create()
+    session.execution_armed = true
+    return session
+end
+
+function UISession.disarm_execution(session)
+    session = session or UISession.create()
+    session.execution_armed = false
+    return session
+end
+
+function UISession.is_execution_armed(session)
+    if type(session) ~= "table" then
+        return false
+    end
+    return session.execution_armed == true
+end
+
+function UISession.set_last_execution_result(session, result)
+    session = session or UISession.create()
+    session.last_execution_result = result
+    return session
+end
+
+function UISession.get_last_execution_result(session)
+    if type(session) ~= "table" then
+        return nil
+    end
+    return session.last_execution_result
+end
+
 function UISession.get_state(session)
     session = session or {}
 
@@ -66,7 +101,9 @@ function UISession.get_state(session)
         transport_confirmed = session.transport_confirmed == true,
         confirmed_action = session.confirmed_action,
         confirmed_target_section = session.confirmed_target_section,
-        confirmation_count = session.confirmation_count or 0
+        confirmation_count = session.confirmation_count or 0,
+        execution_armed = session.execution_armed == true,
+        last_execution_result = session.last_execution_result
     }
 end
 

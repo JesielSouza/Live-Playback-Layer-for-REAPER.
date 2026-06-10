@@ -58,22 +58,116 @@ function TransportAdapter.build_seek_plan(intent, runtime_snapshot, options)
 end
 
 function TransportAdapter.execute_real(intent, runtime_snapshot, gate_result, options)
-    local validation = TransportAdapter.validate_real_execution(intent, runtime_snapshot, gate_result, options)
-    local seek_plan = nil
+    options = options or {}
+    local action = type(intent) == "table" and intent.action or nil
+    local target_section = type(intent) == "table" and intent.target_section or nil
 
-    if type(intent) == "table" then
-        seek_plan = TransportAdapter.build_seek_plan(intent, runtime_snapshot, options)
+    if not options.enable_real_cursor_move then
+        return {
+            ok = false,
+            executed = false,
+            real_transport_attempted = false,
+            action = action,
+            target_section = target_section,
+            reason = "real_cursor_move_not_enabled",
+            warnings = {},
+            errors = {}
+        }
     end
 
+    if not options.execution_armed then
+        return {
+            ok = false,
+            executed = false,
+            real_transport_attempted = false,
+            action = action,
+            target_section = target_section,
+            reason = "execution_not_armed",
+            warnings = {},
+            errors = {}
+        }
+    end
+
+    if not options.manual_confirmed then
+        return {
+            ok = false,
+            executed = false,
+            real_transport_attempted = false,
+            action = action,
+            target_section = target_section,
+            reason = "manual_confirmation_required",
+            warnings = {},
+            errors = {}
+        }
+    end
+
+    local seek_plan = TransportAdapter.build_seek_plan(intent, runtime_snapshot, options)
+    if not seek_plan or seek_plan.ok ~= true then
+        return {
+            ok = false,
+            executed = false,
+            real_transport_attempted = false,
+            action = action,
+            target_section = target_section,
+            reason = "seek_plan_not_ok",
+            warnings = {},
+            errors = {}
+        }
+    end
+
+    local target_position = seek_plan.target_position
+    if type(target_position) ~= "number" then
+        return {
+            ok = false,
+            executed = false,
+            real_transport_attempted = false,
+            action = action,
+            target_section = target_section,
+            reason = "missing_target_position",
+            warnings = {},
+            errors = {}
+        }
+    end
+
+    if not (_G.reaper) then
+        return {
+            ok = false,
+            executed = false,
+            real_transport_attempted = false,
+            action = action,
+            target_section = target_section,
+            reason = "reaper_not_available",
+            warnings = {},
+            errors = {}
+        }
+    end
+
+    if type(_G.reaper.SetEditCurPos) ~= "function" then
+        return {
+            ok = false,
+            executed = false,
+            real_transport_attempted = false,
+            action = action,
+            target_section = target_section,
+            reason = "set_edit_cur_pos_not_available",
+            warnings = {},
+            errors = {}
+        }
+    end
+
+    -- Real Action
+    _G.reaper.SetEditCurPos(target_position, false, false)
+
     return {
-        ok = false,
-        executed = false,
-        real_transport_attempted = false,
-        reason = validation.reason or "real_transport_locked",
-        action = seek_plan and seek_plan.action or type(intent) == "table" and intent.action or nil,
-        target_section = seek_plan and seek_plan.target_section or type(intent) == "table" and intent.target_section or nil,
+        ok = true,
+        executed = true,
+        real_transport_attempted = true,
+        action = action,
+        target_section = target_section,
+        target_position = target_position,
+        reason = "cursor_move_executed",
         warnings = {},
-        errors = { validation.reason or "real_transport_locked" }
+        errors = {}
     }
 end
 
