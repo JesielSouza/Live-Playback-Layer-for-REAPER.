@@ -103,3 +103,6 @@ The transport adapter defines the future real execution interface, but this impl
 
 ## Real Transport Adapter Status Note
 The UI exposes transport adapter capabilities as read-only status. It does not call execution functions and does not add operational controls.
+
+## Locked Seek Plan Note
+The seek plan module builds read-only future movement plans from transport intents and runtime sections. It resolves target positions for validation, but execution remains locked.

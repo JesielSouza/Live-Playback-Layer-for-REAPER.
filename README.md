@@ -97,3 +97,6 @@ O adapter de transporte (`scripts/transport_adapter.lua`) prepara a interface fu
 
 ## Real Transport Adapter Status
 A UI exibe as capacidades do adapter real de forma read-only. O bloco mostra backend `reaper`, suporte real desabilitado e todas as capacidades operacionais como `false`.
+
+## Locked Seek Plan
+O plano de seek (`scripts/seek_plan.lua`) resolve uma posicao alvo futura a partir da intent ou das sections do runtime, mas permanece travado. Ele gera apenas dados read-only com `reason=seek_plan_locked` e nunca executa deslocamento.

@@ -5,6 +5,7 @@
 --]]
 
 local TransportAdapter = {}
+local SeekPlan = require("scripts.seek_plan")
 
 function TransportAdapter.get_capabilities(options)
     return {
@@ -52,16 +53,25 @@ function TransportAdapter.validate_real_execution(intent, runtime_snapshot, gate
     return validation_result("real_transport_locked")
 end
 
+function TransportAdapter.build_seek_plan(intent, runtime_snapshot, options)
+    return SeekPlan.build(intent, runtime_snapshot, options)
+end
+
 function TransportAdapter.execute_real(intent, runtime_snapshot, gate_result, options)
     local validation = TransportAdapter.validate_real_execution(intent, runtime_snapshot, gate_result, options)
+    local seek_plan = nil
+
+    if type(intent) == "table" then
+        seek_plan = TransportAdapter.build_seek_plan(intent, runtime_snapshot, options)
+    end
 
     return {
         ok = false,
         executed = false,
         real_transport_attempted = false,
         reason = validation.reason or "real_transport_locked",
-        action = type(intent) == "table" and intent.action or nil,
-        target_section = type(intent) == "table" and intent.target_section or nil,
+        action = seek_plan and seek_plan.action or type(intent) == "table" and intent.action or nil,
+        target_section = seek_plan and seek_plan.target_section or type(intent) == "table" and intent.target_section or nil,
         warnings = {},
         errors = { validation.reason or "real_transport_locked" }
     }

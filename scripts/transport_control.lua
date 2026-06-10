@@ -133,4 +133,8 @@ function TransportControl.execute_real_intent(intent, runtime_snapshot, gate_res
     return TransportAdapter.execute_real(intent, runtime_snapshot, gate_result, options)
 end
 
+function TransportControl.build_seek_plan(intent, runtime_snapshot, options)
+    return TransportAdapter.build_seek_plan(intent, runtime_snapshot, options)
+end
+
 return TransportControl
