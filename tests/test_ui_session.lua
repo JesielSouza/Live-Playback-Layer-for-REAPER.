@@ -118,6 +118,10 @@ local function run_ui_session_tests()
     assert(state4.last_operator_action == "test_action", "Test 25 failed")
     print("Test 25 passed: last_operator_action saved")
 
+    ui_session.set_last_setlist_result(session, { ok = true, reason = "saved" })
+    assert(ui_session.get_last_setlist_result(session).reason == "saved", "Test 30 failed")
+    print("Test 30 passed: last_setlist_result saved")
+
     -- v0.2 Selection tests
     ui_session.select_section(session, "CHORUS_1", 30.0)
     assert(ui_session.get_selected_section(session) == "CHORUS_1", "Test 26 failed")

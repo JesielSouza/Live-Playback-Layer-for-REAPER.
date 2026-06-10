@@ -18,6 +18,8 @@ local TrackAdapter = require("scripts.track_adapter")
 local TrackCatalog = require("scripts.track_catalog")
 local UIMixer = require("scripts.ui_mixer")
 local MixerState = require("scripts.mixer_state")
+local UISetlist = require("scripts.ui_setlist")
+local SetlistModel = require("scripts.setlist_model")
 
 local function text_or_nil(value)
     if value == nil then
@@ -116,6 +118,11 @@ function UIRuntime.build_view_model(snapshot, ui_session, mixer_state, options)
     local track_catalog = TrackCatalog.build(track_scan)
     local mixer = UIMixer.build(track_catalog, current_mixer_state)
 
+    -- Setlist logic
+    local setlist = options.setlist_override
+    local ui_setlist = UISetlist.build(setlist, {})
+    local current_song = SetlistModel.get_current_song(setlist)
+
     if type(snapshot) ~= "table" then
         local transport_gate_result = TransportGate.evaluate(nil, nil)
         local simulation_result = TransportControl.simulate_intent(nil, nil, {
@@ -202,6 +209,10 @@ function UIRuntime.build_view_model(snapshot, ui_session, mixer_state, options)
             track_catalog = track_catalog,
             mixer = mixer,
             last_mixer_result = current_mixer_state.last_mixer_result,
+            setlist = setlist,
+            ui_setlist = ui_setlist,
+            current_song = current_song,
+            last_setlist_result = session_state.last_setlist_result,
             operator_summary = {
                 playback = playback_state_label(playback_status),
                 current_section = "nil",
@@ -325,6 +336,10 @@ function UIRuntime.build_view_model(snapshot, ui_session, mixer_state, options)
         track_catalog = track_catalog,
         mixer = mixer,
         last_mixer_result = current_mixer_state.last_mixer_result,
+        setlist = setlist,
+        ui_setlist = ui_setlist,
+        current_song = current_song,
+        last_setlist_result = session_state.last_setlist_result,
         operator_summary = {
             playback = playback_state_label(playback_status),
             current_section = text_or_nil(snapshot.current_section),
@@ -461,6 +476,12 @@ function UIRuntime.get_mixer_summary_lines(view_model)
     view_model = view_model or {}
     local mixer = view_model.mixer or {}
     return UIMixer.get_summary_lines(mixer)
+end
+
+function UIRuntime.get_setlist_lines(view_model)
+    view_model = view_model or {}
+    local ui_setlist = view_model.ui_setlist or {}
+    return UISetlist.get_summary_lines(ui_setlist)
 end
 
 function UIRuntime.get_transport_preview_lines(view_model)

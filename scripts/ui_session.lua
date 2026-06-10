@@ -14,6 +14,7 @@ local function apply_defaults(session)
     session.execution_armed = false
     session.last_execution_result = nil
     session.last_operator_action = nil
+    session.last_setlist_result = nil
     session.debug_visible = false
     
     -- v0.2 Selection state
@@ -132,6 +133,17 @@ function UISession.set_last_operator_action(session, action)
     return session
 end
 
+function UISession.set_last_setlist_result(session, result)
+    session = session or UISession.create()
+    session.last_setlist_result = result
+    return session
+end
+
+function UISession.get_last_setlist_result(session)
+    if type(session) ~= "table" then return nil end
+    return session.last_setlist_result
+end
+
 -- v0.2 Selection functions
 function UISession.select_section(session, section_id, target_position)
     session = session or UISession.create()
@@ -183,6 +195,7 @@ function UISession.get_state(session)
         debug_visible = session.debug_visible == true,
         last_execution_result = session.last_execution_result,
         last_operator_action = session.last_operator_action,
+        last_setlist_result = session.last_setlist_result,
         selected_section = session.selected_section,
         selected_target_position = session.selected_target_position,
         selected_action = session.selected_action

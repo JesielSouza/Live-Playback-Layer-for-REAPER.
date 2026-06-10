@@ -1,34 +1,36 @@
-# Manual Test Checklist: Sprint v0.3 Mixer
+# Manual Test Checklist: Sprint v0.4 Setlist
 
-This checklist ensures the v0.3 Mixer features work correctly inside REAPER.
+This checklist ensures the v0.4 Setlist features work correctly inside REAPER.
 
-## 1. Track Detection & Classification
-- [ ] Rename a track to "CLICK". Confirm it appears in the "Click" category.
-- [ ] Rename a track to "GUIA". Confirm it appears in the "Guide" category.
-- [ ] Rename a track to "BATERIA". Confirm it appears in the "Drums" category.
-- [ ] Confirm all stem categories (Bass, Keys, etc.) work as expected based on names.
+## 1. Setlist Initialization
+- [ ] Open `reaper_ui.lua`.
+- [ ] Confirm `live_playback_setlist.lua` is created in the project folder.
+- [ ] UI shows "Setlist / Songs" section at the top.
+- [ ] A default card "Current Project" is visible and marked with `▶`.
 
-## 2. Mixer Rendering
-- [ ] UI shows "Mixer / Stems" section.
-- [ ] Summary line shows correct counts for total/stems/click/guide.
-- [ ] "Hide Mixer" hides the section. "Show Mixer" shows it.
-- [ ] Categories are collapsible.
+## 2. Song Navigation
+- [ ] Click "Add Placeholder". Confirm a second "Current Project" card appears.
+- [ ] Click "Next Song".
+- [ ] The `▶` prefix moves to the second song.
+- [ ] The second song text is colored (Green).
+- [ ] Click "Previous Song". The `▶` prefix moves back.
+- [ ] Confirm a message "Project loading is not enabled" is visible.
 
-## 3. Mixer Controls
-- [ ] Click "MUTE" on a track. Confirm the track in REAPER is muted.
-- [ ] Click "UNMUTE" on a track. Confirm it is unmuted.
-- [ ] Click "SOLO" on a track. Confirm it is soloed in REAPER.
-- [ ] Click "UNSOLO" on a track. Confirm it is un-soloed.
-- [ ] Click "V-" on a track. Confirm volume decreases in REAPER.
-- [ ] Click "V+" on a track. Confirm volume increases.
+## 3. Persistence
+- [ ] Add a placeholder.
+- [ ] Click "Save Setlist".
+- [ ] Close REAPER and reopen the script.
+- [ ] Confirm the second placeholder is still there.
+- [ ] Click "Reload Setlist" and confirm the UI refreshes correctly.
 
-## 4. Operational Persistence
-- [ ] Last Mixer Action shows details of the last click (action, track, value).
-- [ ] Song Map and Transport buttons still work while the mixer is visible.
+## 4. Integration
+- [ ] Navigate to a different song in the setlist.
+- [ ] Confirm Song Map and Mixer still work for the current REAPER project.
+- [ ] Confirm Transport buttons (Play/Stop) still work.
 
 ## 5. Safety Audits
-- [ ] Changing mixer levels does NOT move the cursor or start playback.
-- [ ] Mixer actions do NOT require "Arm" (as designed for live speed).
-- [ ] No tracks are created, deleted, or reordered.
-- [ ] No markers or regions are created or deleted.
+- [ ] Navigating songs does NOT move the cursor or start playback.
+- [ ] Saving setlist does NOT trigger REAPER commands.
+- [ ] No markers or regions are created.
+- [ ] No tracks are created or deleted.
 - [ ] `Main_OnCommand` is not triggered.

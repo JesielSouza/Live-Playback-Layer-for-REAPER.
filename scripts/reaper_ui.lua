@@ -63,10 +63,18 @@ local TransportControl = require("scripts.transport_control")
 local MixerState = require("scripts.mixer_state")
 local TrackAdapter = require("scripts.track_adapter")
 local UIMixer = require("scripts.ui_mixer")
+local SetlistStore = require("scripts.setlist_store")
+local SetlistModel = require("scripts.setlist_model")
+local UISetlist = require("scripts.ui_setlist")
 
 local ctx = ImGui.CreateContext("Live Playback Layer")
 local ui_session = UISession.create()
 local mixer_state = MixerState.create()
+
+-- Setlist initialization
+local setlist_path = SetlistStore.get_default_path()
+local setlist = SetlistStore.ensure(setlist_path)
+
 local frame_count = 0
 
 local function value_or_nil(value)
@@ -103,7 +111,9 @@ local function loop()
 
     local view_model = nil
     if snapshot_ok then
-        view_model = UIRuntime.build_view_model(snapshot, ui_session, mixer_state)
+        view_model = UIRuntime.build_view_model(snapshot, ui_session, mixer_state, {
+            setlist_override = setlist
+        })
         view_model.frame_count = frame_count
     end
 
@@ -113,11 +123,66 @@ local function loop()
         if snapshot_ok and view_model then
             local summary = view_model.operator_summary or {}
             
-            -- 1. Playback Status (Grande)
+            -- 1. Setlist / Songs
+            render_separator()
+            ImGui.Text(ctx, "Setlist / Songs")
+            ImGui.Text(ctx, "Setlist file: " .. tostring(setlist_path))
+            
+            local ui_setlist = view_model.ui_setlist or {}
+            for _, card in ipairs(ui_setlist.cards or {}) do
+                if card.is_current then
+                    ImGui.TextColored(ctx, 0x00FF00FF, card.label)
+                else
+                    ImGui.Text(ctx, card.label)
+                end
+            end
+            
+            if ImGui.Button(ctx, "Previous Song") then
+                local res = SetlistModel.move_previous(setlist)
+                UISession.set_last_setlist_result(ui_session, res)
+                if res.ok then SetlistStore.save(setlist, setlist_path) end
+            end
+            ImGui.SameLine(ctx)
+            if ImGui.Button(ctx, "Next Song") then
+                local res = SetlistModel.move_next(setlist)
+                UISession.set_last_setlist_result(ui_session, res)
+                if res.ok then SetlistStore.save(setlist, setlist_path) end
+            end
+            ImGui.SameLine(ctx)
+            if ImGui.Button(ctx, "Add Placeholder") then
+                SetlistModel.add_song(setlist, { title = "Current Project" })
+                local res = SetlistStore.save(setlist, setlist_path)
+                UISession.set_last_setlist_result(ui_session, res)
+            end
+            
+            if ImGui.Button(ctx, "Save Setlist") then
+                local res = SetlistStore.save(setlist, setlist_path)
+                UISession.set_last_setlist_result(ui_session, res)
+            end
+            ImGui.SameLine(ctx)
+            if ImGui.Button(ctx, "Reload Setlist") then
+                local res = SetlistStore.load(setlist_path)
+                if res.ok then setlist = res.setlist end
+                UISession.set_last_setlist_result(ui_session, res)
+            end
+            
+            local last_sl = UISession.get_last_setlist_result(ui_session)
+            if last_sl then
+                ImGui.Text(ctx, "Last Setlist Action: " .. tostring(last_sl.reason))
+                if last_sl.ok == false then
+                    ImGui.TextColored(ctx, 0xFF0000FF, "Path: " .. tostring(last_sl.path))
+                    if last_sl.error then
+                        ImGui.TextColored(ctx, 0xFF0000FF, "Error: " .. tostring(last_sl.error))
+                    end
+                end
+            end
+            ImGui.Text(ctx, "Project loading is not enabled in this version.")
+
+            -- 2. Playback Status (Grande)
             render_separator()
             ImGui.Text(ctx, "PLAYBACK: " .. string.upper(summary.playback or "UNKNOWN"))
             
-            -- 2. Visual Timeline / Song Map
+            -- 3. Visual Timeline / Song Map
             render_separator()
             ImGui.Text(ctx, "Song Map")
             local blocks = view_model.timeline and view_model.timeline.blocks or {}
@@ -138,7 +203,7 @@ local function loop()
                 end
             end
 
-            -- 3. Operator Panel
+            -- 4. Operator Panel
             render_separator()
             ImGui.Text(ctx, "Operator Panel")
             for _, line in ipairs(UIRuntime.get_operator_lines(view_model)) do
@@ -231,7 +296,7 @@ local function loop()
                 UISession.disarm_execution(ui_session)
             end
 
-            -- 4. Mixer / Stems
+            -- 5. Mixer / Stems
             render_separator()
             if ImGui.Button(ctx, (MixerState.is_visible(mixer_state) and "Hide Mixer" or "Show Mixer")) then
                 MixerState.toggle_visible(mixer_state)
@@ -280,7 +345,7 @@ local function loop()
                 end
             end
 
-            -- 5. Debug
+            -- 6. Debug
             render_separator()
             local debug_label = view_model.debug_visible and "Hide Debug" or "Show Debug"
             if ImGui.Button(ctx, debug_label) then
@@ -306,6 +371,12 @@ local function loop()
                 render_card(cards[2])
                 render_card(cards[3])
                 render_card(cards[4])
+
+                render_separator()
+                ImGui.Text(ctx, "Setlist Diagnostics")
+                for _, line in ipairs(UIRuntime.get_setlist_lines(view_model)) do
+                    ImGui.Text(ctx, line)
+                end
 
                 render_separator()
                 ImGui.Text(ctx, "Transport Preview")
