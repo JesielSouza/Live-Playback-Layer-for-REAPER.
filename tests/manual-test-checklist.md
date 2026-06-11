@@ -1,39 +1,37 @@
-# Manual Test Checklist: Sprint v0.6 Live Control
+# Manual Test Checklist: Sprint v0.7 Section Cues
 
-This checklist ensures the v0.6 Live Control features work correctly inside REAPER.
+This checklist ensures the v0.7 Section Cues features work correctly inside REAPER.
 
-## 1. Live Queue Management
-- [ ] UI shows "Live Control" section.
-- [ ] Select a section and click "Add Selected to Queue". Confirm it appears in the queue list.
-- [ ] Click "Add Next to Queue". Confirm the automatic next section is added.
-- [ ] Click "^" (Up) on a queue item. Confirm it moves up.
-- [ ] Click "v" (Down) on a queue item. Confirm it moves down.
-- [ ] Click "RM" (Remove) on an item. Confirm it is removed.
-- [ ] Click "Clear Queue". Confirm the list is empty.
+## 1. Cues Initialization
+- [ ] Open `reaper_ui.lua`.
+- [ ] UI shows "Section Cues" section.
+- [ ] `live_playback_cues.lua` is created in the project folder.
+- [ ] Summary line shows correct counts (starts at 0).
+- [ ] Warning "No MIDI is sent" is visible.
 
-## 2. Infinite Loop Mode
-- [ ] Click "Loop Current". Confirm "Infinite Loop: ON" appears with the current section.
-- [ ] Operator Panel shows "Active Source: infinite_loop" and "Active Target" matching the loop.
-- [ ] Click "Clear Loop". Confirm "Infinite Loop: OFF".
-- [ ] Select a section and click "Loop Selected". Confirm it enables loop for that section.
+## 2. Cue Management (Current Section)
+- [ ] Click "Add Note to Current".
+- [ ] A new cue appears under "Current Section Cues".
+- [ ] Check `live_playback_cues.lua` and confirm it contains the new cue data.
+- [ ] Click "DISABLE" on the cue. Status changes to `[OFF]`.
+- [ ] Click "ENABLE" on the cue. Status changes to `[ON]`.
+- [ ] Click "Add MIDI Placeholder to Current". Confirm it appears as a different type.
 
-## 3. Execution Priority
-- [ ] With nothing selected/queued: Active Source is "next_section".
-- [ ] Select a section: Active Source becomes "selected_section".
-- [ ] Add an item to queue: Active Source becomes "live_queue".
-- [ ] Enable loop: Active Source becomes "infinite_loop".
-- [ ] Confirm + Arm + Move/Jump follows this priority.
+## 3. Cue Management (Selection)
+- [ ] Select a non-current section in the Song Map (e.g., CHORUS_1).
+- [ ] Click "Add Note to Selected".
+- [ ] Confirm the cue is added.
+- [ ] Make the selected section the Active Target (e.g., Confirm it).
+- [ ] Confirm the cue appears in the "Active Target Cues" list.
 
-## 4. Operational Flow
-- [ ] Add a section to the queue.
-- [ ] Confirm + Arm + Jump/Seek Now.
-- [ ] REAPER jumps to the section.
-- [ ] Success: The first item should be automatically removed from the queue.
-- [ ] Failure (e.g., disarmed before click): Item remains in queue.
-- [ ] Enable Infinite Loop. Confirm + Arm + Jump. Loop should remain active after execution.
+## 4. Persistence
+- [ ] Add a few cues.
+- [ ] Click "Save Cues".
+- [ ] Restart the script and confirm the cues are still there.
+- [ ] Click "Reload Cues" and confirm the UI remains consistent.
 
-## 5. Safety Audits
-- [ ] Confirm that adding to queue or enabling loop does NOT move the cursor or start playback.
-- [ ] Confirm that no REAPER Regions are created, deleted, or reordered.
-- [ ] `Main_OnCommand` is not triggered.
-- [ ] Mixer and Setlist features still work as expected.
+## 5. Safety & Integrations
+- [ ] Confirm that adding/disabling cues does NOT trigger any REAPER transport action.
+- [ ] Confirm that no MIDI messages are emitted (if you have a monitor).
+- [ ] Confirm that Song Map, Live Control, and Mixer features still work correctly.
+- [ ] Confirm no REAPER Regions or Markers are changed.

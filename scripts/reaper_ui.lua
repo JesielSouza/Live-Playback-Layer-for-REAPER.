@@ -70,6 +70,9 @@ local ProjectLoadAdapter = require("scripts.project_load_adapter")
 local LiveQueue = require("scripts.live_queue")
 local LoopMode = require("scripts.loop_mode")
 local SongMap = require("scripts.song_map")
+local CueStore = require("scripts.cue_store")
+local CueModel = require("scripts.cue_model")
+local UICues = require("scripts.ui_cues")
 
 local ctx = ImGui.CreateContext("Live Playback Layer")
 local ui_session = UISession.create()
@@ -78,6 +81,10 @@ local mixer_state = MixerState.create()
 -- Setlist initialization
 local setlist_path = SetlistStore.get_default_path()
 local setlist = SetlistStore.ensure(setlist_path)
+
+-- Cues initialization
+local cue_path = CueStore.get_default_path()
+local cue_store = CueStore.ensure(cue_path)
 
 local frame_count = 0
 
@@ -116,7 +123,8 @@ local function loop()
     local view_model = nil
     if snapshot_ok then
         view_model = UIRuntime.build_view_model(snapshot, ui_session, mixer_state, {
-            setlist_override = setlist
+            setlist_override = setlist,
+            cue_store_override = cue_store
         })
         view_model.frame_count = frame_count
     end
@@ -305,7 +313,6 @@ local function loop()
                 ImGui.Text(ctx, LiveQueue.format_item(item, i))
                 ImGui.SameLine(ctx)
                 if ImGui.Button(ctx, "USE##u" .. i) then
-                    -- Move to top
                     local q = ui_session.live_queue
                     local it = table.remove(q.items, i)
                     table.insert(q.items, 1, it)
@@ -429,7 +436,83 @@ local function loop()
                 UISession.disarm_execution(ui_session)
             end
 
-            -- 6. Mixer / Stems
+            -- 6. Section Cues
+            render_separator()
+            ImGui.Text(ctx, "Section Cues")
+            ImGui.Text(ctx, "Cues file: " .. tostring(cue_path))
+            ImGui.Text(ctx, "Cues are visual/planned only. No MIDI is sent.")
+            
+            local ui_cues = view_model.ui_cues or {}
+            for _, line in ipairs(UIRuntime.get_cue_lines(view_model)) do
+                ImGui.Text(ctx, line)
+            end
+
+            if ImGui.Button(ctx, "Add Note to Current") then
+                CueModel.add_placeholder_cue(cue_store, snapshot.current_section, "note")
+                UISession.mark_cues_dirty(ui_session)
+                UISession.set_last_cue_result(ui_session, { ok = true, reason = "cue_added_unsaved" })
+            end
+            ImGui.SameLine(ctx)
+            if ImGui.Button(ctx, "Add MIDI Placeholder to Current") then
+                CueModel.add_placeholder_cue(cue_store, snapshot.current_section, "midi_placeholder")
+                UISession.mark_cues_dirty(ui_session)
+                UISession.set_last_cue_result(ui_session, { ok = true, reason = "cue_added_unsaved" })
+            end
+            
+            if ImGui.Button(ctx, "Add Note to Selected") then
+                if view_model.selected_section then
+                    CueModel.add_placeholder_cue(cue_store, view_model.selected_section, "note")
+                    UISession.mark_cues_dirty(ui_session)
+                    UISession.set_last_cue_result(ui_session, { ok = true, reason = "cue_added_unsaved" })
+                else
+                    UISession.set_last_cue_result(ui_session, { ok = false, reason = "no_selected_section" })
+                end
+            end
+            
+            if ImGui.Button(ctx, "Save Cues") then
+                local res = CueStore.save(cue_store, cue_path)
+                if res.ok then UISession.clear_cues_dirty(ui_session) end
+                UISession.set_last_cue_result(ui_session, res)
+            end
+            ImGui.SameLine(ctx)
+            if ImGui.Button(ctx, "Reload Cues") then
+                local res = CueStore.load(cue_path)
+                if res.ok then 
+                    cue_store = res.store 
+                    UISession.clear_cues_dirty(ui_session)
+                    UISession.set_last_cue_result(ui_session, { ok = true, reason = "cues_reloaded" })
+                else
+                    UISession.set_last_cue_result(ui_session, res)
+                end
+            end
+
+            -- List cues for current section with management buttons
+            local scues = CueModel.get_cues_for_section(cue_store, snapshot.current_section)
+            for _, c in ipairs(scues) do
+                ImGui.Text(ctx, UICues.format_cue(c))
+                ImGui.SameLine(ctx)
+                if ImGui.Button(ctx, (c.enabled and "DISABLE" or "ENABLE") .. "##ec" .. c.id) then
+                    CueModel.set_cue_enabled(cue_store, c.id, not c.enabled)
+                    UISession.mark_cues_dirty(ui_session)
+                    UISession.set_last_cue_result(ui_session, { ok = true, reason = "cue_enabled_set_unsaved" })
+                end
+                ImGui.SameLine(ctx)
+                if ImGui.Button(ctx, "RM##rc" .. c.id) then
+                    CueModel.remove_cue(cue_store, c.id)
+                    UISession.mark_cues_dirty(ui_session)
+                    UISession.set_last_cue_result(ui_session, { ok = true, reason = "cue_removed_unsaved" })
+                end
+            end
+
+            local last_cue = UISession.get_last_cue_result(ui_session)
+            if last_cue then
+                ImGui.Text(ctx, "Last Cue Action: " .. tostring(last_cue.reason))
+                if last_cue.ok == false and last_cue.error then
+                    ImGui.TextColored(ctx, 0xFF0000FF, "Error: " .. tostring(last_cue.error))
+                end
+            end
+
+            -- 7. Mixer / Stems
             render_separator()
             if ImGui.Button(ctx, (MixerState.is_visible(mixer_state) and "Hide Mixer" or "Show Mixer")) then
                 MixerState.toggle_visible(mixer_state)
@@ -478,7 +561,7 @@ local function loop()
                 end
             end
 
-            -- 7. Debug
+            -- 8. Debug
             render_separator()
             local debug_label = view_model.debug_visible and "Hide Debug" or "Show Debug"
             if ImGui.Button(ctx, debug_label) then
@@ -504,6 +587,12 @@ local function loop()
                 render_card(cards[2])
                 render_card(cards[3])
                 render_card(cards[4])
+
+                render_separator()
+                ImGui.Text(ctx, "Cues Diagnostics")
+                for _, line in ipairs(UIRuntime.get_cue_lines(view_model)) do
+                    ImGui.Text(ctx, line)
+                end
 
                 render_separator()
                 ImGui.Text(ctx, "Live Control Diagnostics")

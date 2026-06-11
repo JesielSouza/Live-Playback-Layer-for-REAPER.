@@ -22,6 +22,8 @@ local UISetlist = require("scripts.ui_setlist")
 local SetlistModel = require("scripts.setlist_model")
 local ProjectLoadAdapter = require("scripts.project_load_adapter")
 local UILiveControl = require("scripts.ui_live_control")
+local CueModel = require("scripts.cue_model")
+local UICues = require("scripts.ui_cues")
 
 local function text_or_nil(value)
     if value == nil then
@@ -129,6 +131,11 @@ function UIRuntime.build_view_model(snapshot, ui_session, mixer_state, options)
     local ui_setlist = UISetlist.build(setlist, {})
     local current_song = SetlistModel.get_current_song(setlist)
 
+    -- Cues logic
+    local cue_store = options.cue_store_override
+    local active_intent, active_intent_source = TransportControl.resolve_active_intent(snapshot, ui_session)
+    local ui_cues = UICues.build(cue_store, song_map, active_intent, {})
+
     if type(snapshot) ~= "table" then
         local transport_gate_result = TransportGate.evaluate(nil, nil)
         local simulation_result = TransportControl.simulate_intent(nil, nil, {
@@ -227,6 +234,10 @@ function UIRuntime.build_view_model(snapshot, ui_session, mixer_state, options)
             current_song_project_path = current_song and current_song.project_path or nil,
             current_song_has_project = SetlistModel.song_has_project(current_song),
             last_setlist_result = session_state.last_setlist_result,
+            cue_store = cue_store,
+            ui_cues = ui_cues,
+            last_cue_result = session_state.last_cue_result,
+            cues_dirty = session_state.cues_dirty,
             operator_summary = {
                 playback = playback_state_label(playback_status),
                 current_section = "nil",
@@ -357,6 +368,10 @@ function UIRuntime.build_view_model(snapshot, ui_session, mixer_state, options)
         current_song_project_path = current_song and current_song.project_path or nil,
         current_song_has_project = SetlistModel.song_has_project(current_song),
         last_setlist_result = session_state.last_setlist_result,
+        cue_store = cue_store,
+        ui_cues = ui_cues,
+        last_cue_result = session_state.last_cue_result,
+        cues_dirty = session_state.cues_dirty,
         operator_summary = {
             playback = playback_state_label(playback_status),
             current_section = text_or_nil(snapshot.current_section),
@@ -529,6 +544,23 @@ function UIRuntime.get_live_control_lines(view_model)
     return UILiveControl.get_lines(ui)
 end
 
+function UIRuntime.get_cue_lines(view_model)
+    view_model = view_model or {}
+    local ui_cues = view_model.ui_cues or {}
+    local lines = copy_list(ui_cues.summary_lines)
+    
+    table.insert(lines, "Cues Unsaved Changes: " .. bool_label(view_model.cues_dirty == true))
+
+    if #ui_cues.current_cues > 0 then
+        table.insert(lines, "Current Section Cues:")
+        for _, c in ipairs(ui_cues.current_cues) do
+            table.insert(lines, "- " .. UICues.format_cue(c))
+        end
+    end
+    
+    return lines
+end
+
 function UIRuntime.get_transport_preview_lines(view_model)
     view_model = view_model or {}
     local intent = view_model.transport_intent_preview or {}
@@ -697,7 +729,7 @@ function UIRuntime.get_pre_execution_audit_lines(view_model)
         "Manual Confirmed: " .. bool_label(audit.manual_confirmed == true),
         "Gate Reason: " .. text_or_nil(audit.gate_reason),
         "Simulation Message: " .. text_or_nil(audit.simulation_message),
-        "Preflight Status: " .. text_or_nil(snapshot and snapshot.preflight_status or "nil"),
+        "Preflight Status: " .. text_or_nil(audit.preflight_status),
         "Safety Level: " .. text_or_nil(audit.safety_level),
         "Adapter Locked: " .. bool_label(audit.adapter_locked == true),
         "Seek Locked: " .. bool_label(audit.seek_locked == true),

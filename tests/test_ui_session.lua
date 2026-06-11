@@ -156,6 +156,14 @@ local function run_ui_session_tests()
     assert(session.transport_confirmed == false, "Test 34 failed: enable loop must invalidate confirm")
     print("Test 31-34 passed: live control state management works")
 
+    -- v0.7 Cues dirty tests
+    assert(ui_session.are_cues_dirty(session) == false, "Test 40 failed")
+    ui_session.mark_cues_dirty(session)
+    assert(ui_session.are_cues_dirty(session) == true, "Test 41 failed")
+    ui_session.clear_cues_dirty(session)
+    assert(ui_session.are_cues_dirty(session) == false, "Test 42 failed")
+    print("Test 40-42 passed: cues dirty state management works")
+
     print("\nUI session tests passed successfully!")
 end
 

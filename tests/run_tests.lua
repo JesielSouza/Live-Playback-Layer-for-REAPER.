@@ -47,7 +47,10 @@ local test_files = {
     "tests/test_project_load_adapter.lua",
     "tests/test_live_queue.lua",
     "tests/test_loop_mode.lua",
-    "tests/test_ui_live_control.lua"
+    "tests/test_ui_live_control.lua",
+    "tests/test_cue_model.lua",
+    "tests/test_cue_store.lua",
+    "tests/test_ui_cues.lua"
 }
 
 for _, file in ipairs(test_files) do

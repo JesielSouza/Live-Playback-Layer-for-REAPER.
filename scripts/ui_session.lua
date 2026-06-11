@@ -18,6 +18,7 @@ local function apply_defaults(session)
     session.last_operator_action = nil
     session.last_setlist_result = nil
     session.last_project_load_result = nil
+    session.last_cue_result = nil
     session.debug_visible = false
     
     -- v0.2 Selection state
@@ -29,6 +30,9 @@ local function apply_defaults(session)
     session.live_queue = LiveQueue.create()
     session.loop_mode = LoopMode.create()
     session.last_live_control_result = nil
+
+    -- v0.7 Cues state
+    session.cues_dirty = false
     
     return session
 end
@@ -161,6 +165,37 @@ end
 function UISession.get_last_project_load_result(session)
     if type(session) ~= "table" then return nil end
     return session.last_project_load_result
+end
+
+function UISession.set_last_cue_result(session, result)
+    session = session or UISession.create()
+    session.last_cue_result = result
+    return session
+end
+
+function UISession.get_last_cue_result(session)
+    if type(session) ~= "table" then return nil end
+    return session.last_cue_result
+end
+
+-- v0.7 Cues dirty management
+function UISession.set_cues_dirty(session, value)
+    session = session or UISession.create()
+    session.cues_dirty = (value == true)
+    return session
+end
+
+function UISession.are_cues_dirty(session)
+    if type(session) ~= "table" then return false end
+    return session.cues_dirty == true
+end
+
+function UISession.mark_cues_dirty(session)
+    return UISession.set_cues_dirty(session, true)
+end
+
+function UISession.clear_cues_dirty(session)
+    return UISession.set_cues_dirty(session, false)
 end
 
 -- v0.2 Selection functions
@@ -302,6 +337,8 @@ function UISession.get_state(session)
         last_operator_action = session.last_operator_action,
         last_setlist_result = session.last_setlist_result,
         last_project_load_result = session.last_project_load_result,
+        last_cue_result = session.last_cue_result,
+        cues_dirty = session.cues_dirty == true,
         selected_section = session.selected_section,
         selected_target_position = session.selected_target_position,
         selected_action = session.selected_action,
