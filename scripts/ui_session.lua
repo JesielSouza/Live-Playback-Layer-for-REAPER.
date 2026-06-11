@@ -19,6 +19,7 @@ local function apply_defaults(session)
     session.last_setlist_result = nil
     session.last_project_load_result = nil
     session.last_cue_result = nil
+    session.last_midi_dry_run_result = nil
     session.debug_visible = false
     
     -- v0.2 Selection state
@@ -176,6 +177,17 @@ end
 function UISession.get_last_cue_result(session)
     if type(session) ~= "table" then return nil end
     return session.last_cue_result
+end
+
+function UISession.set_last_midi_dry_run_result(session, result)
+    session = session or UISession.create()
+    session.last_midi_dry_run_result = result
+    return session
+end
+
+function UISession.get_last_midi_dry_run_result(session)
+    if type(session) ~= "table" then return nil end
+    return session.last_midi_dry_run_result
 end
 
 -- v0.7 Cues dirty management
@@ -338,6 +350,7 @@ function UISession.get_state(session)
         last_setlist_result = session.last_setlist_result,
         last_project_load_result = session.last_project_load_result,
         last_cue_result = session.last_cue_result,
+        last_midi_dry_run_result = session.last_midi_dry_run_result,
         cues_dirty = session.cues_dirty == true,
         selected_section = session.selected_section,
         selected_target_position = session.selected_target_position,

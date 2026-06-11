@@ -24,6 +24,8 @@ local ProjectLoadAdapter = require("scripts.project_load_adapter")
 local UILiveControl = require("scripts.ui_live_control")
 local CueModel = require("scripts.cue_model")
 local UICues = require("scripts.ui_cues")
+local UIMidiPreview = require("scripts.ui_midi_preview")
+local MidiCueModel = require("scripts.midi_cue_model")
 
 local function text_or_nil(value)
     if value == nil then
@@ -131,10 +133,15 @@ function UIRuntime.build_view_model(snapshot, ui_session, mixer_state, options)
     local ui_setlist = UISetlist.build(setlist, {})
     local current_song = SetlistModel.get_current_song(setlist)
 
+    -- Active Intent
+    local active_intent, active_intent_source = TransportControl.resolve_active_intent(snapshot, ui_session)
+
     -- Cues logic
     local cue_store = options.cue_store_override
-    local active_intent, active_intent_source = TransportControl.resolve_active_intent(snapshot, ui_session)
     local ui_cues = UICues.build(cue_store, song_map, active_intent, {})
+
+    -- MIDI logic
+    local midi_preview = UIMidiPreview.build(cue_store, song_map, active_intent, {})
 
     if type(snapshot) ~= "table" then
         local transport_gate_result = TransportGate.evaluate(nil, nil)
@@ -238,6 +245,8 @@ function UIRuntime.build_view_model(snapshot, ui_session, mixer_state, options)
             ui_cues = ui_cues,
             last_cue_result = session_state.last_cue_result,
             cues_dirty = session_state.cues_dirty,
+            midi_preview = midi_preview,
+            last_midi_dry_run_result = session_state.last_midi_dry_run_result,
             operator_summary = {
                 playback = playback_state_label(playback_status),
                 current_section = "nil",
@@ -258,8 +267,6 @@ function UIRuntime.build_view_model(snapshot, ui_session, mixer_state, options)
 
     local transport_intent = TransportControl.build_intent("go_next", snapshot, { dry_run = true })
     local loop_current_intent = TransportControl.build_loop_current_intent(snapshot)
-    
-    local active_intent, active_intent_source = TransportControl.resolve_active_intent(snapshot, ui_session)
     
     local manual_confirmed = UISession.is_transport_confirmed(ui_session, active_intent)
     local transport_gate_result = TransportGate.evaluate(active_intent, snapshot, {
@@ -372,6 +379,8 @@ function UIRuntime.build_view_model(snapshot, ui_session, mixer_state, options)
         ui_cues = ui_cues,
         last_cue_result = session_state.last_cue_result,
         cues_dirty = session_state.cues_dirty,
+        midi_preview = midi_preview,
+        last_midi_dry_run_result = session_state.last_midi_dry_run_result,
         operator_summary = {
             playback = playback_state_label(playback_status),
             current_section = text_or_nil(snapshot.current_section),
@@ -556,6 +565,19 @@ function UIRuntime.get_cue_lines(view_model)
         for _, c in ipairs(ui_cues.current_cues) do
             table.insert(lines, "- " .. UICues.format_cue(c))
         end
+    end
+    
+    return lines
+end
+
+function UIRuntime.get_midi_preview_lines(view_model)
+    view_model = view_model or {}
+    local model = view_model.midi_preview or {}
+    local lines = copy_list(model.summary_lines or {})
+    
+    local res = view_model.last_midi_dry_run_result
+    if res then
+        table.insert(lines, "Last MIDI Dry Run: reason=" .. tostring(res.reason))
     end
     
     return lines

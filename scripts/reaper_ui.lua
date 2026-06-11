@@ -73,6 +73,9 @@ local SongMap = require("scripts.song_map")
 local CueStore = require("scripts.cue_store")
 local CueModel = require("scripts.cue_model")
 local UICues = require("scripts.ui_cues")
+local MidiCueModel = require("scripts.midi_cue_model")
+local MidiDryRun = require("scripts.midi_dry_run")
+local UIMidiPreview = require("scripts.ui_midi_preview")
 
 local ctx = ImGui.CreateContext("Live Playback Layer")
 local ui_session = UISession.create()
@@ -512,7 +515,49 @@ local function loop()
                 end
             end
 
-            -- 7. Mixer / Stems
+            -- 7. MIDI Cue Preview
+            render_separator()
+            ImGui.Text(ctx, "MIDI Cue Preview")
+            ImGui.Text(ctx, "MIDI dry-run only. No MIDI is sent.")
+            local m_prev = view_model.midi_preview or {}
+            for _, line in ipairs(UIRuntime.get_midi_preview_lines(view_model)) do
+                ImGui.Text(ctx, line)
+            end
+
+            if ImGui.Button(ctx, "Dry Run Current MIDI") then
+                local evs = MidiCueModel.build_events_for_section(cue_store, snapshot.current_section)
+                local res = MidiDryRun.run(evs, { source = "current", section_id = snapshot.current_section })
+                UISession.set_last_midi_dry_run_result(ui_session, res)
+            end
+            ImGui.SameLine(ctx)
+            if ImGui.Button(ctx, "Dry Run Next MIDI") then
+                local evs = MidiCueModel.build_events_for_section(cue_store, snapshot.next_section)
+                local res = MidiDryRun.run(evs, { source = "next", section_id = snapshot.next_section })
+                UISession.set_last_midi_dry_run_result(ui_session, res)
+            end
+            ImGui.SameLine(ctx)
+            if ImGui.Button(ctx, "Dry Run Active MIDI") then
+                local target = view_model.active_intent and view_model.active_intent.target_section
+                local evs = MidiCueModel.build_events_for_section(cue_store, target)
+                local res = MidiDryRun.run(evs, { source = "active_target", section_id = target })
+                UISession.set_last_midi_dry_run_result(ui_session, res)
+            end
+
+            -- Display events for current section
+            if m_prev.current and #m_prev.current.events > 0 then
+                ImGui.Text(ctx, "Current Section MIDI Events:")
+                for _, e in ipairs(m_prev.current.events) do
+                    ImGui.Text(ctx, "- " .. UIMidiPreview.format_event_line(e))
+                end
+            end
+            if m_prev.current and #m_prev.current.invalid > 0 then
+                ImGui.TextColored(ctx, 0xFF0000FF, "Current Section INVALID MIDI:")
+                for _, e in ipairs(m_prev.current.invalid) do
+                    ImGui.TextColored(ctx, 0xFF0000FF, "- " .. UIMidiPreview.format_event_line(e))
+                end
+            end
+
+            -- 8. Mixer / Stems
             render_separator()
             if ImGui.Button(ctx, (MixerState.is_visible(mixer_state) and "Hide Mixer" or "Show Mixer")) then
                 MixerState.toggle_visible(mixer_state)
@@ -561,7 +606,7 @@ local function loop()
                 end
             end
 
-            -- 8. Debug
+            -- 9. Debug
             render_separator()
             local debug_label = view_model.debug_visible and "Hide Debug" or "Show Debug"
             if ImGui.Button(ctx, debug_label) then
@@ -587,6 +632,12 @@ local function loop()
                 render_card(cards[2])
                 render_card(cards[3])
                 render_card(cards[4])
+
+                render_separator()
+                ImGui.Text(ctx, "MIDI Preview Diagnostics")
+                for _, line in ipairs(UIRuntime.get_midi_preview_lines(view_model)) do
+                    ImGui.Text(ctx, line)
+                end
 
                 render_separator()
                 ImGui.Text(ctx, "Cues Diagnostics")
