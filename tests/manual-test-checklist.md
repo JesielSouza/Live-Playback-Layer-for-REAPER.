@@ -1,36 +1,39 @@
-# Manual Test Checklist: Sprint v0.4 Setlist
+# Manual Test Checklist: Sprint v0.6 Live Control
 
-This checklist ensures the v0.4 Setlist features work correctly inside REAPER.
+This checklist ensures the v0.6 Live Control features work correctly inside REAPER.
 
-## 1. Setlist Initialization
-- [ ] Open `reaper_ui.lua`.
-- [ ] Confirm `live_playback_setlist.lua` is created in the project folder.
-- [ ] UI shows "Setlist / Songs" section at the top.
-- [ ] A default card "Current Project" is visible and marked with `▶`.
+## 1. Live Queue Management
+- [ ] UI shows "Live Control" section.
+- [ ] Select a section and click "Add Selected to Queue". Confirm it appears in the queue list.
+- [ ] Click "Add Next to Queue". Confirm the automatic next section is added.
+- [ ] Click "^" (Up) on a queue item. Confirm it moves up.
+- [ ] Click "v" (Down) on a queue item. Confirm it moves down.
+- [ ] Click "RM" (Remove) on an item. Confirm it is removed.
+- [ ] Click "Clear Queue". Confirm the list is empty.
 
-## 2. Song Navigation
-- [ ] Click "Add Placeholder". Confirm a second "Current Project" card appears.
-- [ ] Click "Next Song".
-- [ ] The `▶` prefix moves to the second song.
-- [ ] The second song text is colored (Green).
-- [ ] Click "Previous Song". The `▶` prefix moves back.
-- [ ] Confirm a message "Project loading is not enabled" is visible.
+## 2. Infinite Loop Mode
+- [ ] Click "Loop Current". Confirm "Infinite Loop: ON" appears with the current section.
+- [ ] Operator Panel shows "Active Source: infinite_loop" and "Active Target" matching the loop.
+- [ ] Click "Clear Loop". Confirm "Infinite Loop: OFF".
+- [ ] Select a section and click "Loop Selected". Confirm it enables loop for that section.
 
-## 3. Persistence
-- [ ] Add a placeholder.
-- [ ] Click "Save Setlist".
-- [ ] Close REAPER and reopen the script.
-- [ ] Confirm the second placeholder is still there.
-- [ ] Click "Reload Setlist" and confirm the UI refreshes correctly.
+## 3. Execution Priority
+- [ ] With nothing selected/queued: Active Source is "next_section".
+- [ ] Select a section: Active Source becomes "selected_section".
+- [ ] Add an item to queue: Active Source becomes "live_queue".
+- [ ] Enable loop: Active Source becomes "infinite_loop".
+- [ ] Confirm + Arm + Move/Jump follows this priority.
 
-## 4. Integration
-- [ ] Navigate to a different song in the setlist.
-- [ ] Confirm Song Map and Mixer still work for the current REAPER project.
-- [ ] Confirm Transport buttons (Play/Stop) still work.
+## 4. Operational Flow
+- [ ] Add a section to the queue.
+- [ ] Confirm + Arm + Jump/Seek Now.
+- [ ] REAPER jumps to the section.
+- [ ] Success: The first item should be automatically removed from the queue.
+- [ ] Failure (e.g., disarmed before click): Item remains in queue.
+- [ ] Enable Infinite Loop. Confirm + Arm + Jump. Loop should remain active after execution.
 
 ## 5. Safety Audits
-- [ ] Navigating songs does NOT move the cursor or start playback.
-- [ ] Saving setlist does NOT trigger REAPER commands.
-- [ ] No markers or regions are created.
-- [ ] No tracks are created or deleted.
+- [ ] Confirm that adding to queue or enabling loop does NOT move the cursor or start playback.
+- [ ] Confirm that no REAPER Regions are created, deleted, or reordered.
 - [ ] `Main_OnCommand` is not triggered.
+- [ ] Mixer and Setlist features still work as expected.

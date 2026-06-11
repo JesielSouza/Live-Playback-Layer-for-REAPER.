@@ -1,4 +1,6 @@
 local ui_session = require("scripts.ui_session")
+local live_queue = require("scripts.live_queue")
+local loop_mode = require("scripts.loop_mode")
 
 local function build_intent()
     return {
@@ -139,6 +141,20 @@ local function run_ui_session_tests()
     ui_session.clear_selected_section(session)
     assert(ui_session.get_selected_section(session) == nil, "Test 29 failed")
     print("Test 29 passed: clear_selected_section works")
+
+    -- v0.6 Live Control tests
+    ui_session.reset(session)
+    assert(live_queue.is_empty(ui_session.get_live_queue(session)), "Test 31 failed")
+    assert(not loop_mode.is_enabled(ui_session.get_loop_mode(session)), "Test 32 failed")
+    
+    ui_session.confirm_transport(session, build_intent())
+    ui_session.add_to_live_queue(session, "S1")
+    assert(session.transport_confirmed == false, "Test 33 failed: add to queue must invalidate confirm")
+    
+    ui_session.confirm_transport(session, build_intent())
+    ui_session.enable_infinite_loop(session, "S2")
+    assert(session.transport_confirmed == false, "Test 34 failed: enable loop must invalidate confirm")
+    print("Test 31-34 passed: live control state management works")
 
     print("\nUI session tests passed successfully!")
 end

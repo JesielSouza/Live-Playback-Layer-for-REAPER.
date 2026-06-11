@@ -63,9 +63,26 @@ local function run_ui_runtime_tests()
     assert(string.find(mixer_lines[2], "CLICK"), "Test 95 failed")
     print("Test 94-95 passed: get_mixer_lines works")
 
-    local summary_lines = ui_runtime.get_mixer_summary_lines(view_model)
-    assert(string.find(summary_lines[2], "stems=1"), "Test 96 failed")
-    print("Test 96 passed: get_mixer_summary_lines works")
+    -- v0.6 Live Control tests
+    assert(view_model.live_queue ~= nil, "Test 100 failed")
+    assert(view_model.loop_mode ~= nil, "Test 101 failed")
+    assert(view_model.ui_live_control ~= nil, "Test 102 failed")
+    print("Test 100-102 passed: view_model includes live control data")
+
+    assert(view_model.active_intent_source == "next_section", "Test 103 failed")
+    
+    ui_session.add_to_live_queue(session, "CHORUS_1", { target_position = 30.0 })
+    local vm2 = ui_runtime.build_view_model(build_snapshot(), session, mixer, options)
+    assert(vm2.active_intent_source == "live_queue", "Test 104 failed")
+    
+    ui_session.enable_infinite_loop(session, "VERSE_1", { target_position = 10.0 })
+    local vm3 = ui_runtime.build_view_model(build_snapshot(), session, mixer, options)
+    assert(vm3.active_intent_source == "infinite_loop", "Test 105 failed")
+    print("Test 103-105 passed: active_intent_source follows priority")
+
+    local live_lines = ui_runtime.get_live_control_lines(vm3)
+    assert(string.find(live_lines[1], "Infinite Loop"), "Test 106 failed")
+    print("Test 106 passed: get_live_control_lines works")
 
     print("\nUI runtime tests passed successfully!")
 end

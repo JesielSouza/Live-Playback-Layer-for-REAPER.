@@ -67,6 +67,9 @@ local SetlistStore = require("scripts.setlist_store")
 local SetlistModel = require("scripts.setlist_model")
 local UISetlist = require("scripts.ui_setlist")
 local ProjectLoadAdapter = require("scripts.project_load_adapter")
+local LiveQueue = require("scripts.live_queue")
+local LoopMode = require("scripts.loop_mode")
+local SongMap = require("scripts.song_map")
 
 local ctx = ImGui.CreateContext("Live Playback Layer")
 local ui_session = UISession.create()
@@ -140,7 +143,6 @@ local function loop()
                 
                 ImGui.SameLine(ctx)
                 if ImGui.Button(ctx, "LOAD##l" .. card.id) then
-                    -- Mark as current then load
                     SetlistModel.set_current_song(setlist, card.id)
                     SetlistStore.save(setlist, setlist_path)
                     local res = ProjectLoadAdapter.load_project(card.project_path, { enable_project_load = true })
@@ -245,7 +247,90 @@ local function loop()
                 end
             end
 
-            -- 4. Operator Panel
+            -- 4. Live Control
+            render_separator()
+            ImGui.Text(ctx, "Live Control")
+            for _, line in ipairs(UIRuntime.get_live_control_lines(view_model)) do
+                ImGui.Text(ctx, line)
+            end
+
+            if ImGui.Button(ctx, "Add Selected to Queue") then
+                if view_model.selected_section then
+                    local sm = view_model.song_map or TransportControl.build_song_map(snapshot)
+                    local s = SongMap.find_section(sm, view_model.selected_section)
+                    UISession.add_to_live_queue(ui_session, view_model.selected_section, {
+                        label = s and s.label or view_model.selected_section,
+                        target_position = s and s.start
+                    })
+                    UISession.set_last_live_control_result(ui_session, { ok = true, reason = "selected_added_to_queue" })
+                else
+                    UISession.set_last_live_control_result(ui_session, { ok = false, reason = "no_selected_section" })
+                end
+            end
+            ImGui.SameLine(ctx)
+            if ImGui.Button(ctx, "Add Current to Queue") then
+                UISession.add_to_live_queue(ui_session, snapshot.current_section, { target_position = snapshot.position })
+            end
+            ImGui.SameLine(ctx)
+            if ImGui.Button(ctx, "Add Next to Queue") then
+                UISession.add_to_live_queue(ui_session, snapshot.next_section, {})
+            end
+            
+            if ImGui.Button(ctx, "Clear Queue") then
+                UISession.clear_live_queue(ui_session)
+            end
+            ImGui.SameLine(ctx)
+            if ImGui.Button(ctx, "Loop Selected") then
+                if view_model.selected_section then
+                    local sm = view_model.song_map or TransportControl.build_song_map(snapshot)
+                    local s = SongMap.find_section(sm, view_model.selected_section)
+                    UISession.toggle_infinite_loop(ui_session, view_model.selected_section, {
+                        label = s and s.label or view_model.selected_section,
+                        target_position = s and s.start
+                    })
+                end
+            end
+            ImGui.SameLine(ctx)
+            if ImGui.Button(ctx, "Loop Current") then
+                UISession.toggle_infinite_loop(ui_session, snapshot.current_section, { target_position = snapshot.position })
+            end
+            ImGui.SameLine(ctx)
+            if ImGui.Button(ctx, "Clear Loop") then
+                UISession.disable_infinite_loop(ui_session)
+            end
+
+            -- Queue items list
+            local q_items = LiveQueue.get_items(ui_session.live_queue)
+            for i, item in ipairs(q_items) do
+                ImGui.Text(ctx, LiveQueue.format_item(item, i))
+                ImGui.SameLine(ctx)
+                if ImGui.Button(ctx, "USE##u" .. i) then
+                    -- Move to top
+                    local q = ui_session.live_queue
+                    local it = table.remove(q.items, i)
+                    table.insert(q.items, 1, it)
+                    UISession.set_live_queue(ui_session, q)
+                end
+                ImGui.SameLine(ctx)
+                if ImGui.Button(ctx, "RM##r" .. i) then
+                    UISession.remove_from_live_queue(ui_session, i)
+                end
+                ImGui.SameLine(ctx)
+                if ImGui.Button(ctx, "^##up" .. i) then
+                    UISession.move_live_queue_item_up(ui_session, i)
+                end
+                ImGui.SameLine(ctx)
+                if ImGui.Button(ctx, "v##dn" .. i) then
+                    UISession.move_live_queue_item_down(ui_session, i)
+                end
+            end
+
+            local last_live = UISession.get_last_live_control_result(ui_session)
+            if last_live then
+                ImGui.Text(ctx, "Last Live Action: " .. tostring(last_live.reason))
+            end
+
+            -- 5. Operator Panel
             render_separator()
             ImGui.Text(ctx, "Operator Panel")
             for _, line in ipairs(UIRuntime.get_operator_lines(view_model)) do
@@ -281,6 +366,9 @@ local function loop()
                     }
                 )
                 UISession.set_last_execution_result(ui_session, result)
+                if result.ok and view_model.active_intent_source == "live_queue" then
+                    LiveQueue.pop(ui_session.live_queue)
+                end
                 UISession.disarm_execution(ui_session)
             end
             ImGui.SameLine(ctx)
@@ -298,10 +386,13 @@ local function loop()
                     }
                 )
                 UISession.set_last_execution_result(ui_session, result)
+                if result.ok and view_model.active_intent_source == "live_queue" then
+                    LiveQueue.pop(ui_session.live_queue)
+                end
                 UISession.disarm_execution(ui_session)
             end
             ImGui.SameLine(ctx)
-            if ImGui.Button(ctx, "Loop Current") then
+            if ImGui.Button(ctx, "Loop Current (instant)") then
                 local loop_intent = TransportControl.build_loop_current_intent(snapshot)
                 UISession.confirm_transport(ui_session, loop_intent)
                 
@@ -338,7 +429,7 @@ local function loop()
                 UISession.disarm_execution(ui_session)
             end
 
-            -- 5. Mixer / Stems
+            -- 6. Mixer / Stems
             render_separator()
             if ImGui.Button(ctx, (MixerState.is_visible(mixer_state) and "Hide Mixer" or "Show Mixer")) then
                 MixerState.toggle_visible(mixer_state)
@@ -387,7 +478,7 @@ local function loop()
                 end
             end
 
-            -- 6. Debug
+            -- 7. Debug
             render_separator()
             local debug_label = view_model.debug_visible and "Hide Debug" or "Show Debug"
             if ImGui.Button(ctx, debug_label) then
@@ -413,6 +504,12 @@ local function loop()
                 render_card(cards[2])
                 render_card(cards[3])
                 render_card(cards[4])
+
+                render_separator()
+                ImGui.Text(ctx, "Live Control Diagnostics")
+                for _, line in ipairs(UIRuntime.get_live_control_lines(view_model)) do
+                    ImGui.Text(ctx, line)
+                end
 
                 render_separator()
                 ImGui.Text(ctx, "Project Load Diagnostics")

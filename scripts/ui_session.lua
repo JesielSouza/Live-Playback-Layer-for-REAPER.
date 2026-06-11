@@ -5,6 +5,8 @@
 --]]
 
 local UISession = {}
+local LiveQueue = require("scripts.live_queue")
+local LoopMode = require("scripts.loop_mode")
 
 local function apply_defaults(session)
     session.transport_confirmed = false
@@ -22,6 +24,11 @@ local function apply_defaults(session)
     session.selected_section = nil
     session.selected_target_position = nil
     session.selected_action = nil
+    
+    -- v0.6 Live Control state
+    session.live_queue = LiveQueue.create()
+    session.loop_mode = LoopMode.create()
+    session.last_live_control_result = nil
     
     return session
 end
@@ -195,6 +202,92 @@ function UISession.confirm_selected_section(session, intent)
     return UISession.confirm_transport(session, intent)
 end
 
+-- v0.6 Live Control functions
+function UISession.get_live_queue(session)
+    if type(session) ~= "table" then return LiveQueue.create() end
+    return session.live_queue
+end
+
+function UISession.set_live_queue(session, queue)
+    session = session or UISession.create()
+    session.live_queue = queue
+    -- Invalida confirmação se a fila mudar
+    session.transport_confirmed = false
+    return session
+end
+
+function UISession.clear_live_queue(session)
+    session = session or UISession.create()
+    LiveQueue.clear(session.live_queue)
+    session.transport_confirmed = false
+    return session
+end
+
+function UISession.add_to_live_queue(session, section_id, metadata)
+    session = session or UISession.create()
+    LiveQueue.add_section(session.live_queue, section_id, metadata)
+    session.transport_confirmed = false
+    return session
+end
+
+function UISession.remove_from_live_queue(session, index)
+    session = session or UISession.create()
+    LiveQueue.remove_at(session.live_queue, index)
+    session.transport_confirmed = false
+    return session
+end
+
+function UISession.move_live_queue_item_up(session, index)
+    session = session or UISession.create()
+    LiveQueue.move_up(session.live_queue, index)
+    session.transport_confirmed = false
+    return session
+end
+
+function UISession.move_live_queue_item_down(session, index)
+    session = session or UISession.create()
+    LiveQueue.move_down(session.live_queue, index)
+    session.transport_confirmed = false
+    return session
+end
+
+function UISession.get_loop_mode(session)
+    if type(session) ~= "table" then return LoopMode.create() end
+    return session.loop_mode
+end
+
+function UISession.enable_infinite_loop(session, section_id, metadata)
+    session = session or UISession.create()
+    LoopMode.enable(session.loop_mode, section_id, metadata)
+    session.transport_confirmed = false
+    return session
+end
+
+function UISession.disable_infinite_loop(session)
+    session = session or UISession.create()
+    LoopMode.disable(session.loop_mode)
+    session.transport_confirmed = false
+    return session
+end
+
+function UISession.toggle_infinite_loop(session, section_id, metadata)
+    session = session or UISession.create()
+    LoopMode.toggle(session.loop_mode, section_id, metadata)
+    session.transport_confirmed = false
+    return session
+end
+
+function UISession.set_last_live_control_result(session, result)
+    session = session or UISession.create()
+    session.last_live_control_result = result
+    return session
+end
+
+function UISession.get_last_live_control_result(session)
+    if type(session) ~= "table" then return nil end
+    return session.last_live_control_result
+end
+
 function UISession.get_state(session)
     session = session or {}
 
@@ -211,7 +304,10 @@ function UISession.get_state(session)
         last_project_load_result = session.last_project_load_result,
         selected_section = session.selected_section,
         selected_target_position = session.selected_target_position,
-        selected_action = session.selected_action
+        selected_action = session.selected_action,
+        live_queue = session.live_queue,
+        loop_mode = session.loop_mode,
+        last_live_control_result = session.last_live_control_result
     }
 end
 

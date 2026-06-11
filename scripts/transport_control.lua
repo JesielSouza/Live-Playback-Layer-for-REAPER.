@@ -8,13 +8,17 @@ local TransportAdapter = require("scripts.transport_adapter")
 local TransportGate = require("scripts.transport_gate")
 local TransportSimulator = require("scripts.transport_simulator")
 local SongMap = require("scripts.song_map")
+local LiveQueue = require("scripts.live_queue")
+local LoopMode = require("scripts.loop_mode")
 
 local VALID_ACTIONS = {
     go_next = true,
     go_previous = true,
     loop_current = true,
     stop_at_end = true,
-    jump_to_section = true
+    jump_to_section = true,
+    live_queue_jump = true,
+    infinite_loop = true
 }
 
 local function default_options(options)
@@ -79,7 +83,7 @@ function TransportControl.build_intent(action, runtime_snapshot, options)
         intent.decision = "STOP_AT_END_INTENT"
     end
 
-    if action ~= "stop_at_end" and action ~= "jump_to_section" and not intent.target_section then
+    if action ~= "stop_at_end" and action ~= "jump_to_section" and action ~= "live_queue_jump" and action ~= "infinite_loop" and not intent.target_section then
         intent.ok = false
         intent.reason = "missing_target_section"
         table.insert(intent.errors, "missing_target_section")
@@ -105,6 +109,75 @@ end
 function TransportControl.build_manual_section_intent(runtime_snapshot, section_id_or_name)
     local song_map = SongMap.build(runtime_snapshot)
     return SongMap.build_intent_for_section(song_map, section_id_or_name)
+end
+
+function TransportControl.build_queue_intent(runtime_snapshot, queue_item)
+    local intent = TransportControl.build_intent("live_queue_jump", runtime_snapshot, { dry_run = true })
+    if not queue_item then
+        intent.ok = false
+        intent.reason = "missing_queue_item"
+        return intent
+    end
+    intent.target_section = queue_item.section_id
+    intent.target_position = queue_item.target_position
+    intent.decision = "LIVE_QUEUE_TARGET"
+    intent.reason = "live_queue_target"
+    return intent
+end
+
+function TransportControl.build_loop_mode_intent(runtime_snapshot, loop_state)
+    local intent = TransportControl.build_intent("infinite_loop", runtime_snapshot, { dry_run = true })
+    if not loop_state or not loop_state.enabled then
+        intent.ok = false
+        intent.reason = "loop_not_enabled"
+        return intent
+    end
+    intent.target_section = loop_state.section_id
+    intent.target_position = loop_state.target_position
+    intent.decision = "INFINITE_LOOP_TARGET"
+    intent.reason = "infinite_loop_target"
+    return intent
+end
+
+function TransportControl.resolve_active_intent(runtime_snapshot, ui_session)
+    if not ui_session then return TransportControl.build_next_intent(runtime_snapshot) end
+    
+    local state = ui_session
+    local song_map = SongMap.build(runtime_snapshot)
+
+    -- 1. Infinite Loop
+    if state.loop_mode and state.loop_mode.enabled then
+        local intent = TransportControl.build_loop_mode_intent(runtime_snapshot, state.loop_mode)
+        if intent.ok then
+            if not intent.target_position then
+                local s = SongMap.find_section(song_map, intent.target_section)
+                intent.target_position = s and s.start
+            end
+            if intent.target_position then return intent, "infinite_loop" end
+        end
+    end
+
+    -- 2. Live Queue
+    if state.live_queue and not LiveQueue.is_empty(state.live_queue) then
+        local item = LiveQueue.peek(state.live_queue)
+        local intent = TransportControl.build_queue_intent(runtime_snapshot, item)
+        if intent.ok then
+            if not intent.target_position then
+                local s = SongMap.find_section(song_map, intent.target_section)
+                intent.target_position = s and s.start
+            end
+            if intent.target_position then return intent, "live_queue" end
+        end
+    end
+
+    -- 3. Selected Section
+    if state.selected_section then
+        local intent = TransportControl.build_manual_section_intent(runtime_snapshot, state.selected_section)
+        if intent.ok then return intent, "selected_section" end
+    end
+
+    -- 4. Next Natural
+    return TransportControl.build_next_intent(runtime_snapshot), "next_section"
 end
 
 function TransportControl.build_song_map(runtime_snapshot)

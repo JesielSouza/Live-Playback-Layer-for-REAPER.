@@ -5,47 +5,42 @@ A safety-first playback control layer for REAPER, designed for live performance.
 ## Features
 
 *   **Operator Mode**: A simplified UI for live operation.
-*   **Setlist / Song Cards (v0.4)**: Manage your repertoire with a local setlist.
-    *   **Persistent Storage**: Setlist is saved to `live_playback_setlist.lua`.
-    *   **Song Metadata**: Track title, artist, BPM, key, and duration.
-    *   **Navigation**: Quick jump between songs in the setlist.
+*   **Live ReOrder Queue (v0.6)**: Queue up next sections on the fly without altering the project.
+*   **Infinite Loop Mode (v0.6)**: Repeat the current or selected section indefinitely.
+*   **Setlist / Song Cards**: Manage your repertoire with a local setlist.
 *   **Song Map / Visual Timeline**: See your song as a sequence of blocks.
-*   **Manual Section Selection**: Click any section on the Song Map to set it as the next target.
+*   **Manual Section Selection**: Click any section on the Song Map to set it as a target.
 *   **Mixer / Stems**: Control your tracks directly from the UI.
-    *   **Automatic Classification**: Tracks are categorized by name.
-    *   **Mute/Solo/Volume**: Dedicated controls for each stem.
 *   **Section Awareness**: Automatic detection of current and next sections.
 *   **Safety Gates**: Multiple layers of validation before any real transport action.
 *   **Explicit Execution**: No automatic jumps. All actions require explicit operator intent.
 
 ## How to Use
 
-1.  **Prepare your Project**:
-    *   Create **Regions** for each section.
-    *   Name your **Tracks** clearly.
-2.  **Setlist Management**:
-    *   The script creates a default `live_playback_setlist.lua` in your project folder.
-    *   Use the UI to navigate between songs.
-    *   *Note: Automatic project loading is not enabled yet. Navigation is logical only.*
-3.  **Open the Script**: Run `reaper_ui.lua`.
-4.  **Operator Workflow**:
-    *   **Confirm & Arm**: Safety sequence for transport.
+1.  **Prepare your Project**: Create Regions for each section.
+2.  **Open the Script**: Run `reaper_ui.lua`.
+3.  **Operator Workflow**:
+    *   **Live Control**:
+        *   **Add to Queue**: Queue up sections to be played in sequence.
+        *   **Infinite Loop**: Toggle loop for the current or a selected section.
+    *   **Song Map**: Visual navigation. Click to select a target.
+    *   **Confirm & Arm**: The safety sequence to enable transport buttons.
     *   **Mixer**: Live control of stems.
-    *   **Song Map**: Visual navigation.
+    *   **Play/Stop**: Primary transport controls.
 
 ## Safety Guarantees
 
 *   **Limited API Whitelist**: Only authorized REAPER APIs are used.
 *   **Locked by Default**: Requires explicit Confirmation + Arming.
-*   **Explicit Mixer**: Writes happen only on button clicks.
+*   **No Region Mutation**: Live Queue and Loop Mode are purely logical and do not change your project Regions.
 
 ## Technical Details
 
 Built with Lua and ReaImGui.
 
-New layers in v0.4:
-*   **SetlistModel**: Logic for song and list management.
-*   **SetlistStore**: Persistence using Lua table serialization.
-*   **UISetlist**: View model for song cards.
+New layers in v0.6:
+*   **LiveQueue**: Logic for managing a sequence of upcoming sections.
+*   **LoopMode**: Logic for infinite repetition of sections.
+*   **UILiveControl**: View model for live performance controls.
 
 See `docs/ARCHITECTURE.md` for more information.

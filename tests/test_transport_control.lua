@@ -1,4 +1,5 @@
 local transport_control = require("scripts.transport_control")
+local ui_session = require("scripts.ui_session")
 
 local function build_snapshot()
     return {
@@ -62,6 +63,44 @@ local function run_transport_control_tests()
     assert(manual_intent.target_section == "ENDING", "Test 17 failed")
     assert(manual_intent.target_position == 50, "Test 17 failed")
     print("Test 17 passed: build_manual_section_intent works")
+
+    -- v0.6 Live Control intents
+    local q_intent = transport_control.build_queue_intent(build_snapshot(), { section_id = "CHORUS_1", target_position = 30.0 })
+    assert(q_intent.action == "live_queue_jump", "Test 20 failed")
+    assert(q_intent.target_section == "CHORUS_1", "Test 20 failed")
+    print("Test 20 passed: build_queue_intent works")
+
+    local l_intent = transport_control.build_loop_mode_intent(build_snapshot(), { enabled = true, section_id = "VERSE_1", target_position = 10.0 })
+    assert(l_intent.action == "infinite_loop", "Test 21 failed")
+    assert(l_intent.target_section == "VERSE_1", "Test 21 failed")
+    print("Test 21 passed: build_loop_mode_intent works")
+
+    -- resolve_active_intent priority tests
+    local session = ui_session.create()
+    local snap = build_snapshot()
+    
+    local i1, src1 = transport_control.resolve_active_intent(snap, session)
+    assert(src1 == "next_section", "Test 22 failed")
+    
+    ui_session.select_section(session, "ENDING", 50.0)
+    local i2, src2 = transport_control.resolve_active_intent(snap, session)
+    assert(src2 == "selected_section", "Test 23 failed")
+    
+    ui_session.add_to_live_queue(session, "CHORUS_1", { target_position = 30.0 })
+    local i3, src3 = transport_control.resolve_active_intent(snap, session)
+    assert(src3 == "live_queue", "Test 24 failed")
+    
+    ui_session.enable_infinite_loop(session, "VERSE_1", { target_position = 10.0 })
+    local i4, src4 = transport_control.resolve_active_intent(snap, session)
+    assert(src4 == "infinite_loop", "Test 25 failed")
+    assert(i4.target_position == 10.0, "Test 25 failed")
+    print("Test 22-25 passed: resolve_active_intent priority works without get_state")
+
+    -- Test missing fields
+    local empty_session = {}
+    local i5, src5 = transport_control.resolve_active_intent(snap, empty_session)
+    assert(src5 == "next_section", "Test 26 failed")
+    print("Test 26 passed: resolve_active_intent handles empty session table")
 
     print("\nTransport control tests passed successfully!")
 end
