@@ -96,6 +96,14 @@ function SetlistModel.get_current_song(setlist)
     return nil
 end
 
+function SetlistModel.get_song_by_id(setlist, song_id)
+    if not setlist or not song_id then return nil end
+    for _, s in ipairs(setlist.songs) do
+        if s.id == song_id then return s end
+    end
+    return nil
+end
+
 function SetlistModel.set_current_song(setlist, song_id)
     if not setlist then return end
     for _, s in ipairs(setlist.songs) do
@@ -225,6 +233,21 @@ function SetlistModel.reorder_song(setlist, song_id, direction)
     end
 
     return { ok = true, setlist = setlist }
+end
+
+function SetlistModel.set_song_project_path(setlist, song_id, project_path)
+    local song = SetlistModel.get_song_by_id(setlist, song_id)
+    if not song then
+        return { ok = false, reason = "song_not_found" }
+    end
+
+    song.project_path = tostring(project_path or "")
+    return { ok = true, setlist = setlist, song = song, reason = "song_project_path_set" }
+end
+
+function SetlistModel.song_has_project(song)
+    if not song then return false end
+    return type(song.project_path) == "string" and song.project_path ~= ""
 end
 
 function SetlistModel.get_summary(setlist)

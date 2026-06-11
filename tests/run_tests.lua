@@ -43,7 +43,8 @@ local test_files = {
     "tests/test_ui_mixer.lua",
     "tests/test_setlist_model.lua",
     "tests/test_setlist_store.lua",
-    "tests/test_ui_setlist.lua"
+    "tests/test_ui_setlist.lua",
+    "tests/test_project_load_adapter.lua"
 }
 
 for _, file in ipairs(test_files) do

@@ -20,6 +20,7 @@ local UIMixer = require("scripts.ui_mixer")
 local MixerState = require("scripts.mixer_state")
 local UISetlist = require("scripts.ui_setlist")
 local SetlistModel = require("scripts.setlist_model")
+local ProjectLoadAdapter = require("scripts.project_load_adapter")
 
 local function text_or_nil(value)
     if value == nil then
@@ -100,6 +101,7 @@ end
 function UIRuntime.build_view_model(snapshot, ui_session, mixer_state, options)
     options = options or {}
     local adapter_capabilities = TransportAdapter.get_capabilities({})
+    local project_load_capabilities = ProjectLoadAdapter.get_capabilities({})
     local session_state = UISession.get_state(ui_session)
     local playback_status = TransportControl.get_playback_status({})
     local current_mixer_state = MixerState.get_state(mixer_state)
@@ -196,11 +198,13 @@ function UIRuntime.build_view_model(snapshot, ui_session, mixer_state, options)
             preflight_report = preflight_report,
             safety_dashboard = safety_dashboard,
             adapter_capabilities = adapter_capabilities,
+            project_load_capabilities = project_load_capabilities,
             seek_plan = seek_plan,
             transport_readiness = transport_readiness,
             pre_execution_audit = pre_execution_audit,
             execution_armed = session_state.execution_armed,
             last_execution_result = session_state.last_execution_result,
+            last_project_load_result = session_state.last_project_load_result,
             debug_visible = session_state.debug_visible,
             playback_status = playback_status,
             song_map = song_map,
@@ -212,6 +216,8 @@ function UIRuntime.build_view_model(snapshot, ui_session, mixer_state, options)
             setlist = setlist,
             ui_setlist = ui_setlist,
             current_song = current_song,
+            current_song_project_path = current_song and current_song.project_path or nil,
+            current_song_has_project = SetlistModel.song_has_project(current_song),
             last_setlist_result = session_state.last_setlist_result,
             operator_summary = {
                 playback = playback_state_label(playback_status),
@@ -322,11 +328,13 @@ function UIRuntime.build_view_model(snapshot, ui_session, mixer_state, options)
         preflight_report = preflight_report,
         safety_dashboard = safety_dashboard,
         adapter_capabilities = adapter_capabilities,
+        project_load_capabilities = project_load_capabilities,
         seek_plan = seek_plan,
         transport_readiness = transport_readiness,
         pre_execution_audit = pre_execution_audit,
         execution_armed = session_state.execution_armed,
         last_execution_result = session_state.last_execution_result,
+        last_project_load_result = session_state.last_project_load_result,
         debug_visible = session_state.debug_visible,
         playback_status = playback_status,
         song_map = song_map,
@@ -339,6 +347,8 @@ function UIRuntime.build_view_model(snapshot, ui_session, mixer_state, options)
         setlist = setlist,
         ui_setlist = ui_setlist,
         current_song = current_song,
+        current_song_project_path = current_song and current_song.project_path or nil,
+        current_song_has_project = SetlistModel.song_has_project(current_song),
         last_setlist_result = session_state.last_setlist_result,
         operator_summary = {
             playback = playback_state_label(playback_status),
@@ -482,6 +492,22 @@ function UIRuntime.get_setlist_lines(view_model)
     view_model = view_model or {}
     local ui_setlist = view_model.ui_setlist or {}
     return UISetlist.get_summary_lines(ui_setlist)
+end
+
+function UIRuntime.get_project_load_lines(view_model)
+    view_model = view_model or {}
+    local lines = {
+        "Project Load",
+        "Current song project: " .. text_or_nil(view_model.current_song_project_path),
+        "Project linked: " .. bool_label(view_model.current_song_has_project == true)
+    }
+    
+    local res = view_model.last_project_load_result
+    if res then
+        table.insert(lines, "Last Project Load: reason=" .. tostring(res.reason))
+    end
+    
+    return lines
 end
 
 function UIRuntime.get_transport_preview_lines(view_model)
@@ -652,7 +678,7 @@ function UIRuntime.get_pre_execution_audit_lines(view_model)
         "Manual Confirmed: " .. bool_label(audit.manual_confirmed == true),
         "Gate Reason: " .. text_or_nil(audit.gate_reason),
         "Simulation Message: " .. text_or_nil(audit.simulation_message),
-        "Preflight Status: " .. text_or_nil(audit.preflight_status),
+        "Preflight Status: " .. text_or_nil(view_model.snapshot and view_model.snapshot.preflight_status or "nil"),
         "Safety Level: " .. text_or_nil(audit.safety_level),
         "Adapter Locked: " .. bool_label(audit.adapter_locked == true),
         "Seek Locked: " .. bool_label(audit.seek_locked == true),

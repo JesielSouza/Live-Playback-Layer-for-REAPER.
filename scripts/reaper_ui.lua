@@ -66,6 +66,7 @@ local UIMixer = require("scripts.ui_mixer")
 local SetlistStore = require("scripts.setlist_store")
 local SetlistModel = require("scripts.setlist_model")
 local UISetlist = require("scripts.ui_setlist")
+local ProjectLoadAdapter = require("scripts.project_load_adapter")
 
 local ctx = ImGui.CreateContext("Live Playback Layer")
 local ui_session = UISession.create()
@@ -127,6 +128,7 @@ local function loop()
             render_separator()
             ImGui.Text(ctx, "Setlist / Songs")
             ImGui.Text(ctx, "Setlist file: " .. tostring(setlist_path))
+            ImGui.Text(ctx, "Project loading is explicit only. Next/Previous will not load projects.")
             
             local ui_setlist = view_model.ui_setlist or {}
             for _, card in ipairs(ui_setlist.cards or {}) do
@@ -134,6 +136,20 @@ local function loop()
                     ImGui.TextColored(ctx, 0x00FF00FF, card.label)
                 else
                     ImGui.Text(ctx, card.label)
+                end
+                
+                ImGui.SameLine(ctx)
+                if ImGui.Button(ctx, "LOAD##l" .. card.id) then
+                    -- Mark as current then load
+                    SetlistModel.set_current_song(setlist, card.id)
+                    SetlistStore.save(setlist, setlist_path)
+                    local res = ProjectLoadAdapter.load_project(card.project_path, { enable_project_load = true })
+                    UISession.set_last_project_load_result(ui_session, res)
+                end
+                ImGui.SameLine(ctx)
+                if ImGui.Button(ctx, "DRY##d" .. card.id) then
+                    local res = ProjectLoadAdapter.load_project(card.project_path, { enable_project_load = true, dry_run = true })
+                    UISession.set_last_project_load_result(ui_session, res)
                 end
             end
             
@@ -153,6 +169,22 @@ local function loop()
                 SetlistModel.add_song(setlist, { title = "Current Project" })
                 local res = SetlistStore.save(setlist, setlist_path)
                 UISession.set_last_setlist_result(ui_session, res)
+            end
+
+            if ImGui.Button(ctx, "Load Current Project") then
+                local current = SetlistModel.get_current_song(setlist)
+                if current then
+                    local res = ProjectLoadAdapter.load_project(current.project_path, { enable_project_load = true })
+                    UISession.set_last_project_load_result(ui_session, res)
+                end
+            end
+            ImGui.SameLine(ctx)
+            if ImGui.Button(ctx, "Dry Run Current") then
+                local current = SetlistModel.get_current_song(setlist)
+                if current then
+                    local res = ProjectLoadAdapter.load_project(current.project_path, { enable_project_load = true, dry_run = true })
+                    UISession.set_last_project_load_result(ui_session, res)
+                end
             end
             
             if ImGui.Button(ctx, "Save Setlist") then
@@ -176,7 +208,17 @@ local function loop()
                     end
                 end
             end
-            ImGui.Text(ctx, "Project loading is not enabled in this version.")
+
+            local last_load = UISession.get_last_project_load_result(ui_session)
+            if last_load then
+                ImGui.Text(ctx, "Last Project Load: " .. tostring(last_load.reason))
+                if last_load.ok == false then
+                    ImGui.TextColored(ctx, 0xFF0000FF, "Path: " .. tostring(last_load.project_path or last_load.path))
+                    if last_load.error then
+                        ImGui.TextColored(ctx, 0xFF0000FF, "Error: " .. tostring(last_load.error))
+                    end
+                end
+            end
 
             -- 2. Playback Status (Grande)
             render_separator()
@@ -371,6 +413,12 @@ local function loop()
                 render_card(cards[2])
                 render_card(cards[3])
                 render_card(cards[4])
+
+                render_separator()
+                ImGui.Text(ctx, "Project Load Diagnostics")
+                for _, line in ipairs(UIRuntime.get_project_load_lines(view_model)) do
+                    ImGui.Text(ctx, line)
+                end
 
                 render_separator()
                 ImGui.Text(ctx, "Setlist Diagnostics")

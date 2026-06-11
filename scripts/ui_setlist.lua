@@ -25,6 +25,8 @@ function UISetlist.build(setlist, options)
     local songs = SetlistModel.get_songs(setlist)
     for i, s in ipairs(songs) do
         local is_current = (s.id == setlist.current_song_id)
+        local has_project = SetlistModel.song_has_project(s)
+        
         local card = {
             id = s.id,
             display_index = i,
@@ -36,7 +38,8 @@ function UISetlist.build(setlist, options)
             project_path = s.project_path,
             notes = s.notes,
             is_current = is_current,
-            has_project_path = (s.project_path ~= nil and s.project_path ~= ""),
+            has_project_path = has_project,
+            project_status_label = has_project and "Project linked" or "No project linked",
             label = UISetlist.format_card({
                 title = s.title,
                 artist = s.artist,
@@ -44,7 +47,8 @@ function UISetlist.build(setlist, options)
                 bpm = s.bpm,
                 duration = s.duration,
                 is_current = is_current,
-                index = i
+                index = i,
+                has_project = has_project
             })
         }
         table.insert(ui.cards, card)
@@ -77,15 +81,17 @@ function UISetlist.format_card(card)
     local bpm_text = card.bpm and string.format(" | %d BPM", card.bpm) or ""
     local key_text = (card.key and card.key ~= "") and string.format(" | Key %s", card.key) or ""
     local duration_text = (card.duration and card.duration ~= "") and string.format(" | %s", card.duration) or ""
+    local project_indicator = card.has_project and " | [RPP]" or " | [NO RPP]"
 
-    return string.format("%s%d. %s — %s%s%s%s",
+    return string.format("%s%d. %s — %s%s%s%s%s",
         prefix,
         card.index or 0,
         card.title or "unknown",
         card.artist or "Unknown",
         key_text,
         bpm_text,
-        duration_text)
+        duration_text,
+        project_indicator)
 end
 
 function UISetlist.format_summary(ui_setlist)
