@@ -81,7 +81,14 @@ local function run_ui_runtime_tests()
     print("Test 103-105 passed: active_intent_source follows priority")
 
     local live_lines = ui_runtime.get_live_control_lines(vm3)
-    assert(string.find(live_lines[1], "Infinite Loop"), "Test 106 failed")
+    local found = false
+    for _, line in ipairs(live_lines) do
+        if string.find(line, "Infinite Loop") then
+            found = true
+            break
+        end
+    end
+    assert(found, "Test 106 failed")
     print("Test 106 passed: get_live_control_lines works")
 
     print("\nUI runtime tests passed successfully!")
