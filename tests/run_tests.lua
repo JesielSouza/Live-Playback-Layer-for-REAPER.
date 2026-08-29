@@ -22,7 +22,7 @@ end
 -- List of test files to run
 local test_files = {
     "tests/test_logger.lua",
-    "tests/test_validation.lua",
+    "tests/test_validator.lua",
     "tests/test_runtime.lua",
     "tests/test_ui_session.lua",
     "tests/test_transport_adapter.lua",

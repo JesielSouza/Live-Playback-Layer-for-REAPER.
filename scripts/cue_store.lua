@@ -78,7 +78,7 @@ end
 function CueStore.deserialize(content)
     if not content or content == "" then return nil, "empty_content" end
     local chunk, err = load(content, "cues", "t", {})
-    if not chunk then
+    if not chunk and loadstring then
         chunk, err = loadstring(content)
     end
     

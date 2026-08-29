@@ -18,13 +18,14 @@ logger.LEVELS = {
 
 -- Internal state
 local config = {
-    file_path = nil
+    file_path = nil,
+    file_handle = nil
 }
 local events_memory = {}
 
 function logger.new(options)
     local instance = {
-        config = { file_path = options and options.file_path },
+        config = { file_path = options and options.file_path, file_handle = nil },
         events_memory = {}
     }
     -- Expose methods on the instance if needed, but the prompt asks for module-level singleton mainly.
@@ -34,8 +35,16 @@ end
 
 function logger.configure(options)
     if type(options) == "table" then
-        if options.file_path ~= nil then
-            config.file_path = options.file_path
+        if options.file_path ~= config.file_path then
+            if config.file_handle then
+                config.file_handle:close()
+                config.file_handle = nil
+            end
+            if options.file_path ~= nil then
+                config.file_path = options.file_path
+            else
+                config.file_path = nil
+            end
         end
     end
 end
@@ -110,13 +119,16 @@ function logger.write_line(line)
         return true -- No file path configured, do not fail
     end
 
-    local file, err = io.open(config.file_path, "a")
-    if not file then
-        return false, err
+    if not config.file_handle then
+        local file, err = io.open(config.file_path, "a")
+        if not file then
+            return false, err
+        end
+        config.file_handle = file
     end
 
-    file:write(line .. "\n")
-    file:close()
+    config.file_handle:write(line .. "\n")
+    config.file_handle:flush()
     return true
 end
 
@@ -129,16 +141,26 @@ function logger.flush()
 
     local payload = logger.serialize_events(events_memory)
 
-    local file, err = io.open(config.file_path, "a")
-    if not file then
-        return false, err
+    if not config.file_handle then
+        local file, err = io.open(config.file_path, "a")
+        if not file then
+            return false, err
+        end
+        config.file_handle = file
     end
 
-    file:write(payload .. "\n")
-    file:close()
+    config.file_handle:write(payload .. "\n")
+    config.file_handle:flush()
 
     logger.clear()
     return true
+end
+
+function logger.close()
+    if config.file_handle then
+        config.file_handle:close()
+        config.file_handle = nil
+    end
 end
 
 -- Backward compatibility for checking structure, though this module is mostly rewritten.

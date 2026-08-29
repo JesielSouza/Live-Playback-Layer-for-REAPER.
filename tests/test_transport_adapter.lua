@@ -13,7 +13,10 @@ local function build_runtime()
     return {
         ok = true,
         current_section = "VERSE_1",
-        next_section = "CHORUS_1"
+        next_section = "CHORUS_1",
+        sections = {
+            { name = "CHORUS_1", start = 12.3 }
+        }
     }
 end
 
@@ -81,10 +84,12 @@ local function run_transport_adapter_tests()
     print("Test 13 passed: seek_executed")
 
     -- Play Tests
+    _G.reaper = nil
     local play_res = transport_adapter.execute_play({ enable_real_play = true, execution_armed = true })
     assert(play_res.reason == "reaper_not_available", "Test 14 failed")
     
     local play_called = false
+    _G.reaper = {}
     _G.reaper.OnPlayButton = function() play_called = true end
     play_res = transport_adapter.execute_play({ enable_real_play = true, execution_armed = true })
     assert(play_res.executed == true, "Test 15 failed")
