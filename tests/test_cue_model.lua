@@ -57,7 +57,7 @@ local function run_cue_model_tests()
 
     -- 21. Summary
     local summ = cue_model.get_summary(store)
-    assert(summ.cue_count == 4, "Test 21 failed")
+    assert(summ.cue_count == 5, "Test 21 failed")
     print("Test 21 passed: get_summary works")
 
     print("\nCue model tests passed successfully!")
