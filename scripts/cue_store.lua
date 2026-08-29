@@ -77,9 +77,22 @@ end
 
 function CueStore.deserialize(content)
     if not content or content == "" then return nil, "empty_content" end
-    local chunk, err = load(content, "cues", "t", {})
-    if not chunk then
+
+    local chunk, err
+
+    -- Try Lua 5.2+ load first safely
+    local ok, res, res_err = pcall(load, content, "cues", "t", {})
+    if ok then
+        chunk = res
+        err = res_err
+    end
+
+    -- Fallback for Lua 5.1
+    if not chunk and type(loadstring) == "function" then
         chunk, err = loadstring(content)
+        if chunk and type(setfenv) == "function" then
+            setfenv(chunk, {})
+        end
     end
     
     if not chunk then return nil, err end

@@ -86,10 +86,22 @@ end
 
 function SetlistStore.deserialize(content)
     if not content or content == "" then return nil, "empty_content" end
-    local chunk, err = load(content, "setlist", "t", {})
-    if not chunk then
-        -- Fallback for older Lua environments if needed, but "t" is safer
+
+    local chunk, err
+
+    -- Try Lua 5.2+ load first safely
+    local ok, res, res_err = pcall(load, content, "setlist", "t", {})
+    if ok then
+        chunk = res
+        err = res_err
+    end
+
+    -- Fallback for Lua 5.1
+    if not chunk and type(loadstring) == "function" then
         chunk, err = loadstring(content)
+        if chunk and type(setfenv) == "function" then
+            setfenv(chunk, {})
+        end
     end
     
     if not chunk then return nil, err end
