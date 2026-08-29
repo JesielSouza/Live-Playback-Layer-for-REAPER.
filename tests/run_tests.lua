@@ -22,7 +22,7 @@ end
 -- List of test files to run
 local test_files = {
     "tests/test_logger.lua",
-    "tests/test_validation.lua",
+    "tests/test_validator.lua",
     "tests/test_runtime.lua",
     "tests/test_ui_session.lua",
     "tests/test_transport_adapter.lua",
@@ -50,7 +50,8 @@ local test_files = {
     "tests/test_ui_live_control.lua",
     "tests/test_cue_model.lua",
     "tests/test_cue_store.lua",
-    "tests/test_ui_cues.lua"
+    "tests/test_ui_cues.lua",
+    "tests/test_utils.lua"
 }
 
 for _, file in ipairs(test_files) do

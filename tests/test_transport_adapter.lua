@@ -53,11 +53,21 @@ local function run_transport_adapter_tests()
     assert(res3.reason == "manual_confirmation_required", "Test 8 failed")
     print("Test 8 passed: manual_confirmation_required")
 
+    -- Test seek plan missing/fail
+    local res_seek = transport_adapter.execute_real(intent, snapshot, gate, { enable_real_cursor_move = true, execution_armed = true, manual_confirmed = true })
+    assert(res_seek.reason == "seek_plan_not_ok", "Test 9 failed")
+    print("Test 9 passed: seek_plan_not_ok")
+
     -- 5. sem _G.reaper retorna reaper_not_available
     _G.reaper = nil
+    intent.target_position = 10 -- mock valid seek plan
+    local real_build_seek_plan = transport_adapter.build_seek_plan
+    transport_adapter.build_seek_plan = function() return { ok = true, target_position = 10 } end
     local res5 = transport_adapter.execute_real(intent, snapshot, gate, { enable_real_cursor_move = true, execution_armed = true, manual_confirmed = true })
     assert(res5.reason == "reaper_not_available", "Test 10 failed")
     print("Test 10 passed: reaper_not_available")
+
+    transport_adapter.build_seek_plan = real_build_seek_plan -- restore
 
     -- 7. caminho válido chama SetEditCurPos(pos, false, false)
     local last_pos = nil
@@ -68,6 +78,7 @@ local function run_transport_adapter_tests()
             last_seekplay = seekplay
         end
     }
+    transport_adapter.build_seek_plan = function() return { ok = true, target_position = 42 } end
     local res7 = transport_adapter.execute_real(intent, snapshot, gate, { enable_real_cursor_move = true, execution_armed = true, manual_confirmed = true, seekplay = false })
     assert(res7.executed == true, "Test 12 failed")
     assert(res7.reason == "cursor_move_executed", "Test 12 failed")
@@ -80,12 +91,15 @@ local function run_transport_adapter_tests()
     assert(last_seekplay == true, "Test 13 failed")
     print("Test 13 passed: seek_executed")
 
+    transport_adapter.build_seek_plan = real_build_seek_plan -- restore
+
     -- Play Tests
+    _G.reaper = nil
     local play_res = transport_adapter.execute_play({ enable_real_play = true, execution_armed = true })
     assert(play_res.reason == "reaper_not_available", "Test 14 failed")
     
     local play_called = false
-    _G.reaper.OnPlayButton = function() play_called = true end
+    _G.reaper = { OnPlayButton = function() play_called = true end }
     play_res = transport_adapter.execute_play({ enable_real_play = true, execution_armed = true })
     assert(play_res.executed == true, "Test 15 failed")
     assert(play_called == true, "Test 15 failed")
