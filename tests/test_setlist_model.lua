@@ -74,10 +74,11 @@ local function run_setlist_model_tests()
     print("Test 16-18 passed: add/remove works")
 
     -- 19-20 Reorder
-    setlist_model.reorder_song(sl, sl.songs[1].id, "down")
+    local song2_id = sl.songs[1].id
+    setlist_model.reorder_song(sl, song2_id, "down")
     assert(sl.songs[1].title == "S3", "Test 19 failed")
     
-    setlist_model.reorder_song(sl, sl.songs[1].id, "up")
+    setlist_model.reorder_song(sl, song2_id, "up")
     assert(sl.songs[1].title == "S2", "Test 20 failed")
     print("Test 19-20 passed: reorder works")
 
